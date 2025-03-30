@@ -111,13 +111,21 @@
     Joueur 2 : <span id="score-j2">0</span><br>
     Manche : <span id="manche-count">1</span>
   </div>
-  <div id="config" style="margin: 20px auto; max-width: 400px;">
-    <h3>Configuration de la partie</h3>
-    <label>Nombre de cartes par joueur : <input type="number" id="card-count" min="3" max="7" value="4"></label><br><br>
-    <label>Nombre de cartes visibles au début : <input type="number" id="visible-count" min="0" max="7" value="2"></label><br><br>
-    <label>Score pour gagner : <input type="number" id="target-score" min="1" max="10" value="3"></label><br><br>
-    <button onclick="startNewGame()">Lancer la partie</button>
-  </div>
+  <div id="config" style="margin: 20px auto; max-width: 400px; display: none;">
+  <h3>Créer ou rejoindre une partie</h3>
+  <button onclick="createRoom()">Créer une partie</button>
+  <br><br>
+  <input type="text" id="room-code" placeholder="Code de partie" style="padding: 8px; font-size: 16px; border-radius: 8px;">
+  <button onclick="joinRoom()">Rejoindre une partie</button>
+</div>
+
+<div id="setup" style="margin: 20px auto; max-width: 400px; display: none;">
+  <h3>Configuration de la partie</h3>
+  <label>Nombre de cartes par joueur : <input type="number" id="card-count" min="3" max="7" value="4"></label><br><br>
+  <label>Nombre de cartes visibles au début : <input type="number" id="visible-count" min="0" max="7" value="2"></label><br><br>
+  <label>Score pour gagner : <input type="number" id="target-score" min="1" max="10" value="3"></label><br><br>
+  <button onclick="startNewGame()">Lancer la partie</button>
+</div>
   <div id="game" style="display:none;">
     <div class="game-area" id="game-area">
       <h2>Joueur 1</h2>
@@ -514,6 +522,23 @@ function resetGame() {
 
 // === FIN LOGIQUE COMPLÈTE DU JEU ===
 
+
+function createRoom() {
+  const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+  sessionStorage.setItem("roomId", roomId);
+  document.getElementById("config").style.display = "none";
+  document.getElementById("setup").style.display = "block";
+  logAction("🔧 Partie créée. Code : " + roomId);
+}
+
+function joinRoom() {
+  const roomId = document.getElementById("room-code").value.trim().toUpperCase();
+  if (!roomId) return alert("Veuillez entrer un code de partie valide.");
+  sessionStorage.setItem("roomId", roomId);
+  document.getElementById("config").style.display = "none";
+  document.getElementById("setup").style.display = "block";
+  logAction("🔗 Rejoint la partie : " + roomId);
+}
 </script>
   <div id="log"></div>
 <script type="module">
