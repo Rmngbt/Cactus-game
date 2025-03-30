@@ -113,10 +113,10 @@
   </div>
   <div id="config" style="margin: 20px auto; max-width: 400px; display: none;">
   <h3>Créer ou rejoindre une partie</h3>
-  <button onclick="createRoom()">Créer une partie</button>
+  <button onclick="safeCreateRoom()" id="btn-create" disabled>Créer une partie</button>
   <br><br>
   <input type="text" id="room-code" placeholder="Code de partie" style="padding: 8px; font-size: 16px; border-radius: 8px;">
-  <button onclick="joinRoom()">Rejoindre une partie</button>
+  <button onclick="joinRoom()" id="btn-join" disabled>Rejoindre une partie</button>
 </div>
 
 <!-- Salle d’attente -->
@@ -594,6 +594,13 @@ function launchSetup() {
   document.getElementById("setup").style.display = "block";
   logAction("🟢 Configuration de la partie prête.");
 }
+function safeCreateRoom() {
+  if (typeof ref !== 'function' || typeof set !== 'function') {
+    alert("Firebase n'est pas encore prêt. Veuillez patienter ou recharger la page.");
+    return;
+  }
+  createRoom();
+}
 </script>
   <div id="log"></div>
 <script type="module">
@@ -617,6 +624,10 @@ function launchSetup() {
   window.ref = ref;
   window.set = set;
   window.onValue = onValue;
+
+  // ✅ Activer les boutons seulement après initialisation Firebase
+  document.getElementById("btn-create").disabled = false;
+  if (document.getElementById("btn-join")) document.getElementById("btn-join").disabled = false;
   const auth = getAuth(app);
 
   window.syncTurnToFirebase = function (turn) {
