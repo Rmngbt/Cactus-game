@@ -80,6 +80,11 @@ function drawRandomCard() {
 let mancheCount = 1;
 
 function startNewGame() {
+  if (typeof window.syncTurnToFirebase !== 'function') {
+    console.error("⛔ syncTurnToFirebase non disponible. Attendez que Firebase soit prêt.");
+    alert("Erreur : Firebase non initialisé. Veuillez recharger la page.");
+    return;
+  }
   cardCount = parseInt(document.getElementById("card-count").value);
   targetScore = parseInt(document.getElementById("target-score").value);
   startVisibleCount = parseInt(document.getElementById("visible-count").value);
@@ -439,7 +444,7 @@ function resetGame() {
   // === SYNCHRONISATION EN TEMPS RÉEL DU TOUR ===
 
   // Mettre à jour le tour dans Firebase à chaque changement
-  function syncTurnToFirebase(turn) {
+  window.syncTurnToFirebase = function (turn) {
     set(ref(db, 'game/currentPlayer'), turn);
   }
 
