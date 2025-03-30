@@ -536,7 +536,9 @@ function createRoom() {
   const username = document.getElementById("username").value.trim();
   sessionStorage.setItem("roomId", roomId);
   sessionStorage.setItem("username", username);
+  sessionStorage.setItem("isHost", "true");
   set(ref(db, `games/${roomId}/players/${username}`), { connected: true });
+  set(ref(db, `games/${roomId}/host`), username);
   set(ref(db, `games/${roomId}/currentPlayer`), 1);
   document.getElementById("config").style.display = "none";
   document.getElementById("lobby").style.display = "block";
@@ -554,6 +556,7 @@ function joinRoom() {
   if (!roomId || !username) return alert("Veuillez entrer un code de partie et un pseudo valides.");
   sessionStorage.setItem("roomId", roomId);
   sessionStorage.setItem("username", username);
+  sessionStorage.setItem("isHost", "false");
   set(ref(db, `games/${roomId}/players/${username}`), { connected: true });
   document.getElementById("config").style.display = "none";
   document.getElementById("lobby").style.display = "block";
@@ -569,6 +572,12 @@ function watchLobbyPlayers(roomId) {
   const lobbyDiv = document.getElementById("lobby-players");
   const startBtn = document.getElementById("start-game");
   const playersRef = ref(db, `games/${roomId}/players`);
+  const hostRef = ref(db, `games/${roomId}/host`);
+  onValue(hostRef, (snap) => {
+    const host = snap.val();
+    const username = sessionStorage.getItem("username");
+    startBtn.style.display = (host === username) ? "inline-block" : "none";
+  });
   onValue(playersRef, (snapshot) => {
     const players = snapshot.val();
     if (!players) return;
@@ -579,6 +588,8 @@ function watchLobbyPlayers(roomId) {
 }
 
 function launchSetup() {
+  const roomId = sessionStorage.getItem("roomId");
+  set(ref(db, `games/${roomId}/state`), "setup");
   document.getElementById("lobby").style.display = "none";
   document.getElementById("setup").style.display = "block";
   logAction("🟢 Configuration de la partie prête.");
@@ -616,16 +627,27 @@ function launchSetup() {
 
   const roomId = sessionStorage.getItem("roomId");
   if (roomId) {
-    const turnRef = ref(db, `games/${roomId}/currentPlayer`);
-    onValue(turnRef, (snapshot) => {
-      const val = snapshot.val();
-      if (val !== null && val !== currentPlayer) {
-        currentPlayer = val;
-        updateTurnInfo();
-        renderCards();
-        logAction("🔄 Tour mis à jour : Joueur " + currentPlayer);
-      }
-    });
+  const turnRef = ref(db, `games/${roomId}/currentPlayer`);
+  onValue(turnRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val !== null && val !== currentPlayer) {
+      currentPlayer = val;
+      updateTurnInfo();
+      renderCards();
+      logAction("🔄 Tour mis à jour : Joueur " + currentPlayer);
+    }
+  });
+
+  const stateRef = ref(db, `games/${roomId}/state`);
+  onValue(stateRef, (snap) => {
+    const state = snap.val();
+    if (state === "setup") {
+      document.getElementById("lobby").style.display = "none";
+      document.getElementById("setup").style.display = "block";
+      logAction("🟢 Le créateur a lancé la configuration de la partie.");
+    }
+  });
+}
   }
 
   window.register = function () {
