@@ -99,6 +99,12 @@
 </style>
 </head>
 <body>
+  <div id="welcome" style="padding: 40px; background-color: rgba(255,255,255,0.95); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    <h1>Bienvenue sur Cactus 🌵</h1>
+    <p>Connecte-toi pour rejoindre ou créer une partie !</p>
+    <input type="text" id="username" placeholder="Pseudo" style="padding: 10px; font-size: 16px; border-radius: 10px; margin: 10px;">
+    <button onclick="login()" style="background-color: #32cd32; color: white;">Connexion</button>
+  </div>
   <div id="scoreboard">
     <strong>Score</strong><br>
     Joueur 1 : <span id="score-j1">0</span><br>
@@ -148,6 +154,14 @@ function drawRandomCard() {
 }
 
 let mancheCount = 1;
+
+function login() {
+  const username = document.getElementById("username").value.trim();
+  if (!username) return alert("Entre un pseudo pour continuer.");
+  document.getElementById("welcome").style.display = "none";
+  document.getElementById("config").style.display = "block";
+  logAction("👋 Bienvenue, " + username + " !");
+}
 
 function startNewGame() {
   if (typeof window.syncTurnToFirebase !== 'function') {
@@ -499,6 +513,50 @@ function resetGame() {
 }
 
 // === FIN LOGIQUE COMPLÈTE DU JEU ===
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+
+const auth = getAuth(app);
+
+// Remplace le bloc #welcome par un formulaire complet d'inscription/connexion
+const welcomeDiv = document.getElementById("welcome");
+welcomeDiv.innerHTML = `
+  <h1>Bienvenue sur Cactus 🌵</h1>
+  <p>Inscris-toi ou connecte-toi pour jouer</p>
+  <input type="email" id="email" placeholder="Adresse e-mail" style="padding: 10px; font-size: 16px; border-radius: 10px; margin: 5px;">
+  <input type="password" id="password" placeholder="Mot de passe" style="padding: 10px; font-size: 16px; border-radius: 10px; margin: 5px;">
+  <div>
+    <button onclick="register()" style="background-color: #32cd32; color: white;">Créer un compte</button>
+    <button onclick="loginFirebase()" style="background-color: #ffa500; color: white;">Connexion</button>
+  </div>
+`;
+
+window.register = function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  createUserWithEmailAndPassword(auth, email, password)
+    .then(() => alert("✅ Compte créé avec succès !"))
+    .catch((error) => alert("Erreur: " + error.message));
+};
+
+window.loginFirebase = function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      document.getElementById("welcome").style.display = "none";
+      document.getElementById("config").style.display = "block";
+      logAction("👋 Connecté avec succès");
+    })
+    .catch((error) => alert("Erreur de connexion: " + error.message));
+};
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    document.getElementById("welcome").style.display = "none";
+    document.getElementById("config").style.display = "block";
+    logAction("🔓 Session active détectée");
+  }
+});
 </script>
   <div id="log"></div>
 <script type="module">
