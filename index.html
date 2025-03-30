@@ -567,6 +567,10 @@ function joinRoom() {
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+  window.db = db;
+  window.ref = ref;
+  window.set = set;
+  window.onValue = onValue;
   const auth = getAuth(app);
 
   window.syncTurnToFirebase = function (turn) {
@@ -577,6 +581,17 @@ function joinRoom() {
 
   const roomId = sessionStorage.getItem("roomId");
   if (roomId) {
+    const turnRef = ref(db, `games/${roomId}/currentPlayer`);
+    onValue(turnRef, (snapshot) => {
+      const val = snapshot.val();
+      if (val !== null && val !== currentPlayer) {
+        currentPlayer = val;
+        updateTurnInfo();
+        renderCards();
+        logAction("🔄 Tour mis à jour : Joueur " + currentPlayer);
+      }
+    });
+  }
 
   window.register = function () {
     const email = document.getElementById("email").value;
