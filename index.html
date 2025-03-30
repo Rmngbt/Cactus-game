@@ -5,14 +5,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cactus - Jeu de Cartes</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; }
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      text-align: center;
+      background: linear-gradient(to right, #ffe259, #ffa751);
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
     .game-area { margin-top: 20px; }
-    .card-wrapper { display: inline-block; margin: 5px; position: relative; }
-    .card { width: 80px; height: 120px; background: gray; text-align: center; line-height: 120px; font-size: 24px; color: white; cursor: pointer; transition: outline 0.2s ease; }
+    .card-wrapper {
+      display: inline-block;
+      margin: 10px;
+      position: relative;
+    }
+    .card {
+      width: 80px;
+      height: 120px;
+      background: #4a90e2;
+      border-radius: 10px;
+      border: 2px solid white;
+      text-align: center;
+      line-height: 120px;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
     .card.selectable-start { outline: 3px dashed yellow; }
     .card.highlight { outline: 3px solid lime; box-shadow: 0 0 10px lime; }
-    .discard-btn { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 12px; padding: 2px 4px; cursor: pointer; }
-    #log { margin-top: 20px; padding: 10px; border: 1px solid black; background: #f9f9f9; text-align: left; max-width: 400px; margin-left: auto; margin-right: auto; }
+    .discard-btn {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      background: crimson;
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    #log {
+      margin-top: 20px;
+      padding: 10px;
+      border: 2px dashed #333;
+      background: rgba(255, 255, 255, 0.8);
+      text-align: left;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
 </style>
 <style>
   #scoreboard {
@@ -60,7 +109,6 @@
     </div>
     <button onclick="startNewRound()">Nouvelle manche</button>
     <button id="reset-game" onclick="resetGame()" style="display:none; margin-top:10px;">Nouvelle partie</button>
-    $1
   </div>
 
   <script>
