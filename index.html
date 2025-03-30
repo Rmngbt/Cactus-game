@@ -106,6 +106,7 @@ function startNewRound() {
   cactusDeclared = false;
   cactusCountdown = 0;
   currentPlayer = 1;
+  syncTurnToFirebase(currentPlayer);
   playerCards = Array.from({ length: cardCount }, drawRandomCard);
   opponentCards = Array.from({ length: cardCount }, drawRandomCard);
   document.getElementById("discard").innerText = "Vide";
@@ -355,6 +356,7 @@ function endTurn() {
   }
   
   currentPlayer = currentPlayer === 1 ? 2 : 1;
+  syncTurnToFirebase(currentPlayer);
   updateTurnInfo();
   renderCards();
   logAction("🔁 Tour du joueur " + currentPlayer);
@@ -434,12 +436,24 @@ function resetGame() {
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // TEST : écrire une valeur dans Firebase
-  set(ref(db, 'test/'), {
-    message: "Bonjour Firebase !"
-  });
+  // === SYNCHRONISATION EN TEMPS RÉEL DU TOUR ===
 
-  // TEST : écouter les mises à jour
+  // Mettre à jour le tour dans Firebase à chaque changement
+  function syncTurnToFirebase(turn) {
+    set(ref(db, 'game/currentPlayer'), turn);
+  }
+
+  // Écouter les changements de tour depuis Firebase
+  const turnRef = ref(db, 'game/currentPlayer');
+  onValue(turnRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val !== null && val !== currentPlayer) {
+      currentPlayer = val;
+      updateTurnInfo();
+      renderCards();
+      logAction("🔄 Mise à jour du tour reçue : Joueur " + currentPlayer);
+    }
+  });
   const testRef = ref(db, 'test/');
   onValue(testRef, (snapshot) => {
     const data = snapshot.val();
