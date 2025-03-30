@@ -101,6 +101,7 @@
 <body>
   <div id="welcome" style="padding: 40px; background-color: rgba(255,255,255,0.95); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
     <h1>Bienvenue sur Cactus 🌵</h1>
+	<img src=https://github.com/Rmngbt/Cactus-game/blob/main/acceuil.png>
     <p>Connecte-toi pour rejoindre ou créer une partie !</p>
     <input type="text" id="username" placeholder="Pseudo" style="padding: 10px; font-size: 16px; border-radius: 10px; margin: 10px;">
     <button onclick="login()" style="background-color: #32cd32; color: white;">Connexion</button>
@@ -636,7 +637,6 @@ function safeCreateRoom() {
     set(ref(db, `games/${roomId}/currentPlayer`), turn);
   };
 
-  const roomId = sessionStorage.getItem("roomId");
 if (roomId) {
   const turnRef = ref(db, `games/${roomId}/currentPlayer`);
   onValue(turnRef, (snapshot) => {
@@ -649,21 +649,6 @@ if (roomId) {
     }
   });
 
-  
-  });
-
-
-  const stateRef = ref(db, `games/${roomId}/state`);
-  onValue(stateRef, (snap) => {
-    const state = snap.val();
-    if (state === "setup") {
-      document.getElementById("lobby").style.display = "none";
-      document.getElementById("setup").style.display = "block";
-      logAction("🟢 Le créateur a lancé la configuration de la partie.");
-    }
-  });
-});
-
   const stateRef = ref(db, `games/${roomId}/state`);
   onValue(stateRef, (snap) => {
     const state = snap.val();
@@ -674,7 +659,20 @@ if (roomId) {
     }
   });
 }
-  }
+
+
+
+  const stateRef = ref(db, `games/${roomId}/state`);
+  onValue(stateRef, (snap) => {
+    const state = snap.val();
+    if (state === "setup") {
+      document.getElementById("lobby").style.display = "none";
+      document.getElementById("setup").style.display = "block";
+      logAction("🟢 Le créateur a lancé la configuration de la partie.");
+    }
+  });
+
+  
 
   window.register = function () {
     const email = document.getElementById("email").value;
