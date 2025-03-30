@@ -637,7 +637,7 @@ function safeCreateRoom() {
   };
 
   const roomId = sessionStorage.getItem("roomId");
-  if (roomId) {
+if (roomId) {
   const turnRef = ref(db, `games/${roomId}/currentPlayer`);
   onValue(turnRef, (snapshot) => {
     const val = snapshot.val();
@@ -648,6 +648,10 @@ function safeCreateRoom() {
       logAction("🔄 Tour mis à jour : Joueur " + currentPlayer);
     }
   });
+
+  
+  });
+});
 
   const stateRef = ref(db, `games/${roomId}/state`);
   onValue(stateRef, (snap) => {
