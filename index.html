@@ -316,9 +316,19 @@ function selectCard(cardEl) {
   }, 5000);
   return;
 } if (specialAction && pendingSpecial === 10 && player !== currentPlayer) {
+    if (selectedForSwap !== null) return; // empêcher plusieurs clics
+    selectedForSwap = true;
     cardEl.innerText = set[index];
     logAction("🔍 Carte adverse : " + set[index]);
-    setTimeout(() => { cardEl.innerText = "?"; skipSpecial(); }, 5000);
+    setTimeout(() => {
+      cardEl.innerText = "?";
+      selectedForSwap = null;
+      skipSpecial();
+    }, 5000);
+    return;
+  }, 5000);
+    return;
+  }, 5000);
     return;
   }
   if (specialAction && pendingSpecial === "V") {
