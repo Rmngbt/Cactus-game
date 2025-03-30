@@ -513,55 +513,13 @@ function resetGame() {
 }
 
 // === FIN LOGIQUE COMPLÈTE DU JEU ===
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
 
-const auth = getAuth(app);
-
-// Remplace le bloc #welcome par un formulaire complet d'inscription/connexion
-const welcomeDiv = document.getElementById("welcome");
-welcomeDiv.innerHTML = `
-  <h1>Bienvenue sur Cactus 🌵</h1>
-  <p>Inscris-toi ou connecte-toi pour jouer</p>
-  <input type="email" id="email" placeholder="Adresse e-mail" style="padding: 10px; font-size: 16px; border-radius: 10px; margin: 5px;">
-  <input type="password" id="password" placeholder="Mot de passe" style="padding: 10px; font-size: 16px; border-radius: 10px; margin: 5px;">
-  <div>
-    <button onclick="register()" style="background-color: #32cd32; color: white;">Créer un compte</button>
-    <button onclick="loginFirebase()" style="background-color: #ffa500; color: white;">Connexion</button>
-  </div>
-`;
-
-window.register = function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(() => alert("✅ Compte créé avec succès !"))
-    .catch((error) => alert("Erreur: " + error.message));
-};
-
-window.loginFirebase = function () {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  signInWithEmailAndPassword(auth, email, password)
-    .then(() => {
-      document.getElementById("welcome").style.display = "none";
-      document.getElementById("config").style.display = "block";
-      logAction("👋 Connecté avec succès");
-    })
-    .catch((error) => alert("Erreur de connexion: " + error.message));
-};
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    document.getElementById("welcome").style.display = "none";
-    document.getElementById("config").style.display = "block";
-    logAction("🔓 Session active détectée");
-  }
-});
 </script>
   <div id="log"></div>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
   import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBd2O4MWVNlY5MOVffdcvMrkj2lLxJcdv0",
@@ -575,15 +533,12 @@ onAuthStateChanged(auth, (user) => {
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+  const auth = getAuth(app);
 
-  // === SYNCHRONISATION EN TEMPS RÉEL DU TOUR ===
-
-  // Mettre à jour le tour dans Firebase à chaque changement
   window.syncTurnToFirebase = function (turn) {
     set(ref(db, 'game/currentPlayer'), turn);
-  }
+  };
 
-  // Écouter les changements de tour depuis Firebase
   const turnRef = ref(db, 'game/currentPlayer');
   onValue(turnRef, (snapshot) => {
     const val = snapshot.val();
@@ -594,10 +549,33 @@ onAuthStateChanged(auth, (user) => {
       logAction("🔄 Mise à jour du tour reçue : Joueur " + currentPlayer);
     }
   });
-  const testRef = ref(db, 'test/');
-  onValue(testRef, (snapshot) => {
-    const data = snapshot.val();
-    console.log("🔄 Données reçues :", data);
+
+  window.register = function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(() => alert("✅ Compte créé avec succès !"))
+      .catch((error) => alert("Erreur: " + error.message));
+  };
+
+  window.loginFirebase = function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        document.getElementById("welcome").style.display = "none";
+        document.getElementById("config").style.display = "block";
+        logAction("👋 Connecté avec succès");
+      })
+      .catch((error) => alert("Erreur de connexion: " + error.message));
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById("welcome").style.display = "none";
+      document.getElementById("config").style.display = "block";
+      logAction("🔓 Session active détectée");
+    }
   });
 </script>
 </body>
