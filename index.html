@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cactus - Jeu de Cartes</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    .game-area { margin-top: 20px; }
+    .card-wrapper { display: inline-block; margin: 5px; position: relative; }
+    .card { width: 80px; height: 120px; background: gray; text-align: center; line-height: 120px; font-size: 24px; color: white; cursor: pointer; transition: outline 0.2s ease; }
+    .card.selectable-start { outline: 3px dashed yellow; }
+    .card.highlight { outline: 3px solid lime; box-shadow: 0 0 10px lime; }
+    .discard-btn { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 12px; padding: 2px 4px; cursor: pointer; }
+    #log { margin-top: 20px; padding: 10px; border: 1px solid black; background: #f9f9f9; text-align: left; max-width: 400px; margin-left: auto; margin-right: auto; }
+</style>
+<style>
+  #scoreboard {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+  <div id="scoreboard">
+    <strong>Score</strong><br>
+    Joueur 1 : <span id="score-j1">0</span><br>
+    Joueur 2 : <span id="score-j2">0</span><br>
+    Manche : <span id="manche-count">1</span>
+  </div>
+  <div id="config" style="margin: 20px auto; max-width: 400px;">
+    <h3>Configuration de la partie</h3>
+    <label>Nombre de cartes par joueur : <input type="number" id="card-count" min="3" max="7" value="4"></label><br><br>
+    <label>Nombre de cartes visibles au début : <input type="number" id="visible-count" min="0" max="7" value="2"></label><br><br>
+    <label>Score pour gagner : <input type="number" id="target-score" min="1" max="10" value="3"></label><br><br>
+    <button onclick="startNewGame()">Lancer la partie</button>
+  </div>
+  <div id="game" style="display:none;">
+    <div class="game-area" id="game-area">
+      <h2>Joueur 1</h2>
+      <div id="player-cards"></div>
+      <h2>Joueur 2</h2>
+      <div id="opponent-cards"></div>
+
+      <button onclick="drawCard()">Piocher une carte</button>
+      <button onclick="initiateDiscardSwap()">Prendre de la défausse</button>
+      <button id="skip-special" style="display:none;" onclick="skipSpecial()">Passer l'action spéciale</button>
+      <button onclick="declareCactus()">Cactus</button>
+
+      <div id="discard-pile">Défausse: <span id="discard">Vide</span></div>
+      <p id="turn-info">Tour du joueur 1</p>
+      <p id="drawn-card" style="display: none; cursor: pointer;" onclick="discardDrawnCard()">Carte piochée: <span id="new-card"></span></p>
+    </div>
+    <button onclick="startNewRound()">Nouvelle manche</button>
+    <button id="reset-game" onclick="resetGame()" style="display:none; margin-top:10px;">Nouvelle partie</button>
+    $1
+  </div>
+
+  <script>
+// === DÉBUT LOGIQUE COMPLÈTE DU JEU ===
+
+let cardCount = 4, targetScore = 3, startVisibleCount = 2;
+let playerCards = [], opponentCards = [], discardPile = [], drawnCard = null;
+let currentPlayer = 1, specialAction = false, pendingSpecial = null, selectedForSwap = null;
+let cactusPlayer = null, cactusDeclared = false, cactusCountdown = 0;
+let score1 = 0, score2 = 0;
+const cardValues = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+
+function drawRandomCard() {
+  return cardValues[Math.floor(Math.random() * cardValues.length)];
+}
+
+let mancheCount = 1;
+
+function startNewGame() {
+  cardCount = parseInt(document.getElementById("card-count").value);
+  targetScore = parseInt(document.getElementById("target-score").value);
+  startVisibleCount = parseInt(document.getElementById("visible-count").value);
+  score1 = 0;
+  score2 = 0;
+  document.getElementById("config").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  startNewRound();
+}
+
+function updateScoreboard() {
+  document.getElementById("score-j1").innerText = score1;
+  document.getElementById("score-j2").innerText = score2;
+  document.getElementById("manche-count").innerText = mancheCount;
+}
+
+function startNewRound() {
+  drawnCard = null;
+  discardPile = [];
+  specialAction = false;
+  pendingSpecial = null;
+  selectedForSwap = null;
+  cactusPlayer = null;
+  cactusDeclared = false;
+  cactusCountdown = 0;
+  currentPlayer = 1;
+  playerCards = Array.from({ length: cardCount }, drawRandomCard);
+  opponentCards = Array.from({ length: cardCount }, drawRandomCard);
+  document.getElementById("discard").innerText = "Vide";
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("skip-special").style.display = "none";
+  document.getElementById("log").innerHTML = "";
+  renderCards();
+  updateTurnInfo();
+  setTimeout(() => revealInitialCards(1), 500);
+}
+
+function renderCards() {
+  renderPlayerCards("player-cards", playerCards, 1);
+  renderPlayerCards("opponent-cards", opponentCards, 2);
+}
+
+function renderPlayerCards(containerId, cards, playerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+  cards.forEach((_, index) => {
+    container.innerHTML += `
+      <div class="card-wrapper">
+        <button class="discard-btn" onclick="manualDiscard(${playerId}, ${index})">🗑</button>
+        <div class="card" data-player="${playerId}" data-index="${index}" onclick="selectCard(this)">?</div>
+      </div>`;
+  });
+}
+
+function updateTurnInfo() {
+  document.getElementById("turn-info").innerText = "Tour du joueur " + currentPlayer;
+}
+
+function revealInitialCards(player) {
+  const set = player === 1 ? playerCards : opponentCards;
+  const containerId = player === 1 ? "player-cards" : "opponent-cards";
+  const container = document.getElementById(containerId).children;
+  let toReveal = Math.min(startVisibleCount, set.length);
+  let revealed = 0;
+  logAction("👆 Joueur " + player + ", choisissez " + toReveal + " carte(s) à regarder.");
+  for (let i = 0; i < container.length; i++) {
+    const cardDiv = container[i].querySelector(".card");
+    cardDiv.classList.add("selectable-start");
+    cardDiv.addEventListener("click", function handleClick() {
+      if (revealed >= toReveal || parseInt(cardDiv.getAttribute("data-player")) !== player) return;
+      const index = parseInt(cardDiv.getAttribute("data-index"));
+      cardDiv.innerText = set[index];
+      revealed++;
+      if (revealed === toReveal) {
+        logAction("👀 Joueur " + player + " a regardé ses " + toReveal + " cartes de départ.");
+        setTimeout(() => {
+          for (let j = 0; j < container.length; j++) {
+            const c = container[j].querySelector(".card");
+            c.classList.remove("selectable-start");
+            c.innerText = "?";
+          }
+          if (player === 1) setTimeout(() => revealInitialCards(2), 500);
+        }, 5000);
+      }
+    });
+  }
+}
+
+function logAction(msg) {
+  document.getElementById("log").innerHTML += `<p>${msg}</p>`;
+}
+
+// === LOGIQUE COMPLÉMENTAIRE RESTAURÉE ===
+
+function drawCard() {
+  if (drawnCard !== null) return;
+  
+  drawnCard = drawRandomCard();
+  document.getElementById("new-card").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "block";
+  logAction("🃏 Carte piochée : " + drawnCard);
+}
+
+function initiateDiscardSwap() {
+  if (discardPile.length === 0 || drawnCard !== null) return;
+  if (cactusDeclared && currentPlayer !== cactusPlayer && cactusCountdown > 0) {
+    logAction("🚫 Vous ne pouvez jouer qu'une fois après Cactus.");
+    return;
+  }
+  drawnCard = discardPile.pop();
+  document.getElementById("new-card").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "block";
+  logAction("🔁 Carte prise de la défausse : " + drawnCard);
+}
+
+function discardDrawnCard() {
+  if (!drawnCard) return;
+  discardPile.push(drawnCard);
+  document.getElementById("discard").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "none";
+  const isSpecial = handleSpecialCard(drawnCard);
+  drawnCard = null;
+  renderCards();
+  if (!isSpecial) endTurn();
+}
+
+function manualDiscard(player, index) {
+  const set = player === 1 ? playerCards : opponentCards;
+  const card = set[index];
+  const top = discardPile[discardPile.length - 1];
+  const activeSet = currentPlayer === 1 ? playerCards : opponentCards;
+  const opponentSet = currentPlayer === 1 ? opponentCards : playerCards;
+
+  // Cas 1 : Le joueur actif essaie de défausser une carte de l'adversaire
+  if (player !== currentPlayer) {
+    if (card === top) {
+      logAction("⚠️ Défausse synchronisée réussie sur le jeu adverse : " + card);
+      discardPile.push(card);
+      document.getElementById("discard").innerText = card;
+      set.splice(index, 1); // retirer la carte de l’adversaire
+
+      if (activeSet.length > 0) {
+        const givenCard = activeSet.shift(); // donner la première carte du joueur actif
+        opponentSet.push(givenCard);
+        logAction("🎁 Joueur " + currentPlayer + " donne une carte à l'adversaire : " + givenCard);
+      }
+    } else {
+      logAction("❌ Mauvaise tentative de défausse adverse. Le joueur actif pioche une pénalité.");
+      const penalty = drawRandomCard();
+      activeSet.push(penalty);
+    }
+    renderCards();
+    return;
+  }
+
+  // Cas 2 : Le joueur actif défausse une de ses propres cartes
+  const oldPlayer = currentPlayer;
+  if (card === top) {
+    discardPile.push(card);
+    document.getElementById("discard").innerText = card;
+    set.splice(index, 1);
+    logAction("✅ Carte défaussée correctement : " + card);
+  } else {
+    const penalty = drawRandomCard();
+    set[index] = penalty;
+    discardPile.push(card);
+    document.getElementById("discard").innerText = card;
+    logAction("❌ Mauvaise défausse. Pénalité : carte cachée ajoutée.");
+  }
+  const isSpecial = handleSpecialCard(card);
+  if (!isSpecial) currentPlayer = oldPlayer;
+  renderCards();
+}
+
+function handleSpecialCard(card) {
+  if (card === 8) {
+    specialAction = true;
+    pendingSpecial = 8;
+    document.getElementById("skip-special").style.display = "inline-block";
+    logAction("👁 Effet spécial : regardez une de vos cartes.");
+    return true;
+  }
+  if (card === 10) {
+    specialAction = true;
+    pendingSpecial = 10;
+    document.getElementById("skip-special").style.display = "inline-block";
+    logAction("🔍 Effet spécial : regardez une carte adverse.");
+    return true;
+  }
+  if (card === "V") {
+    specialAction = true;
+    pendingSpecial = "V";
+    document.getElementById("skip-special").style.display = "inline-block";
+    logAction("🔄 Effet spécial : échangez une carte avec l'adversaire.");
+    return true;
+  }
+  return false;
+}
+
+function skipSpecial() {
+  specialAction = false;
+  pendingSpecial = null;
+  selectedForSwap = null;
+  document.getElementById("skip-special").style.display = "none";
+  logAction("⏭ Action spéciale ignorée");
+  endTurn();
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.card').forEach(el => el.classList.remove('highlight'));
+}
+
+function selectCard(cardEl) {
+  clearHighlights();
+  cardEl.classList.add('highlight');
+  const index = parseInt(cardEl.dataset.index);
+  const player = parseInt(cardEl.dataset.player);
+  const set = player === 1 ? playerCards : opponentCards;
+  if (specialAction && pendingSpecial === 8 && player === currentPlayer) {
+  if (selectedForSwap !== null) return; // empêche plusieurs clics
+  selectedForSwap = true;
+  cardEl.innerText = set[index];
+  logAction("👁 Carte révélée : " + set[index]);
+  setTimeout(() => {
+    cardEl.innerText = "?";
+    selectedForSwap = null;
+    skipSpecial();
+  }, 5000);
+  return;
+} if (specialAction && pendingSpecial === 10 && player !== currentPlayer) {
+    cardEl.innerText = set[index];
+    logAction("🔍 Carte adverse : " + set[index]);
+    setTimeout(() => { cardEl.innerText = "?"; skipSpecial(); }, 5000);
+    return;
+  }
+  if (specialAction && pendingSpecial === "V") {
+    if (!selectedForSwap && player === currentPlayer) {
+      selectedForSwap = { player, index };
+      logAction("👉 Choisissez une carte adverse à échanger.");
+      return;
+    }
+    if (selectedForSwap && player !== currentPlayer) {
+      const setA = selectedForSwap.player === 1 ? playerCards : opponentCards;
+      const setB = player === 1 ? playerCards : opponentCards;
+      const temp = setA[selectedForSwap.index];
+      setA[selectedForSwap.index] = setB[index];
+      setB[index] = temp;
+      selectedForSwap = null;
+      logAction("🔄 Cartes échangées.");
+      renderCards();
+      skipSpecial();
+      return;
+    }
+  }
+  if (player !== currentPlayer || drawnCard === null) return;
+  const replaced = set[index];
+  set[index] = drawnCard;
+  discardPile.push(replaced);
+  document.getElementById("discard").innerText = replaced;
+  drawnCard = null;
+  document.getElementById("drawn-card").style.display = "none";
+  logAction("🔄 Carte échangée : " + replaced + " ↔ " + set[index]);
+  const isSpecial = handleSpecialCard(replaced);
+  renderCards();
+  if (!isSpecial) endTurn();
+}
+
+function endTurn() {
+  if (specialAction) return;
+  if (cactusDeclared && currentPlayer !== cactusPlayer) {
+    revealFinalScores();
+    return;
+  }
+  
+  currentPlayer = currentPlayer === 1 ? 2 : 1;
+  updateTurnInfo();
+  renderCards();
+  logAction("🔁 Tour du joueur " + currentPlayer);
+}
+
+function declareCactus() {
+  if (cactusDeclared) return;
+  cactusDeclared = true;
+  cactusPlayer = currentPlayer;
+  logAction("🌵 Joueur " + currentPlayer + " dit Cactus !");
+  endTurn();
+}
+
+function revealFinalScores() {
+  mancheCount++;
+  updateScoreboard();
+  const sum = cards => cards.reduce((t, c) => t + getCardValue(c), 0);
+  const total1 = sum(playerCards);
+  const total2 = sum(opponentCards);
+  renderCards();
+  logAction("🧮 Joueur 1 : " + total1);
+  logAction("🧮 Joueur 2 : " + total2);
+  if (playerCards.every(c => c === "R")) logAction("👑 Joueur 1 a un Cactus Royal !");
+  if (opponentCards.every(c => c === "R")) logAction("👑 Joueur 2 a un Cactus Royal !");
+  if (total1 <= 5 || total2 <= 5) {
+    const winner = total1 < total2 ? 1 : total2 < total1 ? 2 : "égalité";
+    if (winner === "égalité") logAction("🤝 Égalité sous les 5 points !");
+    else {
+      logAction("🏆 Joueur " + winner + " remporte la manche !");
+      if (winner === 1) score1++;
+      if (winner === 2) score2++;
+      logAction("📊 Scores : J1=" + score1 + " | J2=" + score2);
+      if (score1 >= targetScore || score2 >= targetScore) {
+        logAction("🎉 Joueur " + (score1 >= targetScore ? 1 : 2) + " remporte la partie !");
+        document.getElementById("reset-game").style.display = "inline-block";
+    }
+    }
+  } else logAction("❌ Aucun joueur n’a réussi le Cactus.");
+}
+
+function getCardValue(card) {
+  if (card === "R") return 0;
+  if (card === "A") return 1;
+  if (card === 2) return -2;
+  if (["V", "D"].includes(card)) return 10;
+  return typeof card === "number" ? card : 10;
+}
+
+function resetGame() {
+  document.getElementById("config").style.display = "block";
+  document.getElementById("game").style.display = "none";
+  document.getElementById("reset-game").style.display = "none";
+  document.getElementById("log").innerHTML = "";
+  score1 = 0;
+  score2 = 0;
+  mancheCount = 1;
+  updateScoreboard();
+}
+
+// === FIN LOGIQUE COMPLÈTE DU JEU ===
+</script>
+  <div id="log"></div>
+</body>
+</html>
