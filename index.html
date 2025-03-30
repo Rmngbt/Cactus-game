@@ -64,7 +64,26 @@
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-</style>
+    button {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      font-size: 16px;
+      padding: 10px 20px;
+      margin: 10px 5px;
+      border: none;
+      border-radius: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+    button:nth-of-type(1) { background-color: #00bfff; color: white; } /* Piocher */
+    button:nth-of-type(2) { background-color: #ffa500; color: white; } /* Échanger */
+    button:nth-of-type(3) { background-color: #32cd32; color: white; } /* Cactus */
+    button:nth-of-type(4) { background-color: #ff69b4; color: white; } /* Skip Special */
+    button#reset-game, button#start-game { background-color: #4b0082; color: white; }
+
 <style>
   #scoreboard {
     position: absolute;
