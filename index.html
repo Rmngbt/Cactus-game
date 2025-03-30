@@ -1,4 +1,340 @@
-tPlayer;
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cactus - Jeu de Cartes</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      text-align: center;
+      background: url('https://images.unsplash.com/photo-1616627989393-c4641c9c5c80?auto=format&fit=crop&w=1500&q=80');
+      background-size: cover;
+      background-position: center;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .game-area { margin-top: 20px; }
+    .card-wrapper {
+      display: inline-block;
+      margin: 10px;
+      position: relative;
+    }
+    .card {
+      width: 80px;
+      height: 120px;
+      background: #4a90e2;
+      border-radius: 10px;
+      border: 2px solid white;
+      text-align: center;
+      line-height: 120px;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .card.selectable-start { outline: 3px dashed yellow; }
+    .card.highlight { outline: 3px solid lime; box-shadow: 0 0 10px lime; }
+    .discard-btn {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      background: crimson;
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    #log {
+      margin-top: 20px;
+      padding: 10px;
+      border: 2px dashed #333;
+      background: rgba(255, 255, 255, 0.8);
+      text-align: left;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    button {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      font-size: 16px;
+      padding: 10px 20px;
+      margin: 10px 5px;
+      border: none;
+      border-radius: 30px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+    button:nth-of-type(1) { background-color: #00bfff; color: white; } /* Piocher */
+    button:nth-of-type(2) { background-color: #ffa500; color: white; } /* Échanger */
+    button:nth-of-type(3) { background-color: #32cd32; color: white; } /* Cactus */
+    button:nth-of-type(4) { background-color: #ff69b4; color: white; } /* Skip Special */
+    button#reset-game, button#start-game { background-color: #4b0082; color: white; }
+
+<style>
+  #scoreboard {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+  <div id="welcome" style="padding: 40px; background-color: rgba(255,255,255,0.95); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    <h1>Bienvenue sur Cactus 🌵</h1>
+    <p>Connecte-toi pour rejoindre ou créer une partie !</p>
+    <input type="text" id="username" placeholder="Pseudo" style="padding: 10px; font-size: 16px; border-radius: 10px; margin: 10px;">
+    <button onclick="login()" style="background-color: #32cd32; color: white;">Connexion</button>
+  </div>
+  <div id="scoreboard">
+    <strong>Score</strong><br>
+    Joueur 1 : <span id="score-j1">0</span><br>
+    Joueur 2 : <span id="score-j2">0</span><br>
+    Manche : <span id="manche-count">1</span>
+  </div>
+  <div id="config" style="margin: 20px auto; max-width: 400px; display: none;">
+  <h3>Créer ou rejoindre une partie</h3>
+  <button onclick="createRoom()">Créer une partie</button>
+  <br><br>
+  <input type="text" id="room-code" placeholder="Code de partie" style="padding: 8px; font-size: 16px; border-radius: 8px;">
+  <button onclick="joinRoom()">Rejoindre une partie</button>
+</div>
+
+<div id="setup" style="margin: 20px auto; max-width: 400px; display: none;">
+  <h3>Configuration de la partie</h3>
+  <label>Nombre de cartes par joueur : <input type="number" id="card-count" min="3" max="7" value="4"></label><br><br>
+  <label>Nombre de cartes visibles au début : <input type="number" id="visible-count" min="0" max="7" value="2"></label><br><br>
+  <label>Score pour gagner : <input type="number" id="target-score" min="1" max="10" value="3"></label><br><br>
+  <button onclick="startNewGame()">Lancer la partie</button>
+</div>
+  <div id="game" style="display:none;">
+    <div class="game-area" id="game-area">
+      <h2>Joueur 1</h2>
+      <div id="player-cards"></div>
+      <h2>Joueur 2</h2>
+      <div id="opponent-cards"></div>
+
+      <button onclick="drawCard()">Piocher une carte</button>
+      <button onclick="initiateDiscardSwap()">Prendre de la défausse</button>
+      <button id="skip-special" style="display:none;" onclick="skipSpecial()">Passer l'action spéciale</button>
+      <button onclick="declareCactus()">Cactus</button>
+
+      <div id="discard-pile">Défausse: <span id="discard">Vide</span></div>
+      <p id="turn-info">Tour du joueur 1</p>
+      <p id="drawn-card" style="display: none; cursor: pointer;" onclick="discardDrawnCard()">Carte piochée: <span id="new-card"></span></p>
+    </div>
+    <button onclick="startNewRound()">Nouvelle manche</button>
+    <button id="reset-game" onclick="resetGame()" style="display:none; margin-top:10px;">Nouvelle partie</button>
+    $1
+  </div>
+
+  <script>
+// === DÉBUT LOGIQUE COMPLÈTE DU JEU ===
+
+let cardCount = 4, targetScore = 3, startVisibleCount = 2;
+let playerCards = [], opponentCards = [], discardPile = [], drawnCard = null;
+let currentPlayer = 1, specialAction = false, pendingSpecial = null, selectedForSwap = null;
+let cactusPlayer = null, cactusDeclared = false, cactusCountdown = 0;
+let score1 = 0, score2 = 0;
+const cardValues = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+
+function drawRandomCard() {
+  return cardValues[Math.floor(Math.random() * cardValues.length)];
+}
+
+let mancheCount = 1;
+
+function login() {
+  const username = document.getElementById("username").value.trim();
+  if (!username) return alert("Entre un pseudo pour continuer.");
+  document.getElementById("welcome").style.display = "none";
+  document.getElementById("config").style.display = "block";
+  logAction("👋 Bienvenue, " + username + " !");
+}
+
+function startNewGame() {
+  if (typeof window.syncTurnToFirebase !== 'function') {
+    console.error("⛔ syncTurnToFirebase non disponible. Attendez que Firebase soit prêt.");
+    alert("Erreur : Firebase non initialisé. Veuillez recharger la page.");
+    return;
+  }
+  cardCount = parseInt(document.getElementById("card-count").value);
+  targetScore = parseInt(document.getElementById("target-score").value);
+  startVisibleCount = parseInt(document.getElementById("visible-count").value);
+  score1 = 0;
+  score2 = 0;
+  document.getElementById("config").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  startNewRound();
+}
+
+function updateScoreboard() {
+  document.getElementById("score-j1").innerText = score1;
+  document.getElementById("score-j2").innerText = score2;
+  document.getElementById("manche-count").innerText = mancheCount;
+}
+
+function startNewRound() {
+  drawnCard = null;
+  discardPile = [];
+  specialAction = false;
+  pendingSpecial = null;
+  selectedForSwap = null;
+  cactusPlayer = null;
+  cactusDeclared = false;
+  cactusCountdown = 0;
+  currentPlayer = 1;
+  syncTurnToFirebase(currentPlayer);
+  playerCards = Array.from({ length: cardCount }, drawRandomCard);
+  opponentCards = Array.from({ length: cardCount }, drawRandomCard);
+  document.getElementById("discard").innerText = "Vide";
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("skip-special").style.display = "none";
+  document.getElementById("log").innerHTML = "";
+  renderCards();
+  updateTurnInfo();
+  setTimeout(() => revealInitialCards(1), 500);
+}
+
+function renderCards() {
+  renderPlayerCards("player-cards", playerCards, 1);
+  renderPlayerCards("opponent-cards", opponentCards, 2);
+}
+
+function renderPlayerCards(containerId, cards, playerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+  cards.forEach((_, index) => {
+    container.innerHTML += `
+      <div class="card-wrapper">
+        <button class="discard-btn" onclick="manualDiscard(${playerId}, ${index})">🗑</button>
+        <div class="card" data-player="${playerId}" data-index="${index}" onclick="selectCard(this)">?</div>
+      </div>`;
+  });
+}
+
+function updateTurnInfo() {
+  document.getElementById("turn-info").innerText = "Tour du joueur " + currentPlayer;
+}
+
+function revealInitialCards(player) {
+  const set = player === 1 ? playerCards : opponentCards;
+  const containerId = player === 1 ? "player-cards" : "opponent-cards";
+  const container = document.getElementById(containerId).children;
+  let toReveal = Math.min(startVisibleCount, set.length);
+  let revealed = 0;
+  logAction("👆 Joueur " + player + ", choisissez " + toReveal + " carte(s) à regarder.");
+  for (let i = 0; i < container.length; i++) {
+    const cardDiv = container[i].querySelector(".card");
+    cardDiv.classList.add("selectable-start");
+    cardDiv.addEventListener("click", function handleClick() {
+      if (revealed >= toReveal || parseInt(cardDiv.getAttribute("data-player")) !== player) return;
+      const index = parseInt(cardDiv.getAttribute("data-index"));
+      cardDiv.innerText = set[index];
+      revealed++;
+      if (revealed === toReveal) {
+        logAction("👀 Joueur " + player + " a regardé ses " + toReveal + " cartes de départ.");
+        setTimeout(() => {
+          for (let j = 0; j < container.length; j++) {
+            const c = container[j].querySelector(".card");
+            c.classList.remove("selectable-start");
+            c.innerText = "?";
+          }
+          if (player === 1) setTimeout(() => revealInitialCards(2), 500);
+        }, 5000);
+      }
+    });
+  }
+}
+
+function logAction(msg) {
+  document.getElementById("log").innerHTML += `<p>${msg}</p>`;
+}
+
+// === LOGIQUE COMPLÉMENTAIRE RESTAURÉE ===
+
+function drawCard() {
+  if (drawnCard !== null) return;
+  
+  drawnCard = drawRandomCard();
+  document.getElementById("new-card").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "block";
+  logAction("🃏 Carte piochée : " + drawnCard);
+}
+
+function initiateDiscardSwap() {
+  if (discardPile.length === 0 || drawnCard !== null) return;
+  if (cactusDeclared && currentPlayer !== cactusPlayer && cactusCountdown > 0) {
+    logAction("🚫 Vous ne pouvez jouer qu'une fois après Cactus.");
+    return;
+  }
+  drawnCard = discardPile.pop();
+  document.getElementById("new-card").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "block";
+  logAction("🔁 Carte prise de la défausse : " + drawnCard);
+}
+
+function discardDrawnCard() {
+  if (!drawnCard) return;
+  discardPile.push(drawnCard);
+  document.getElementById("discard").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "none";
+  const isSpecial = handleSpecialCard(drawnCard);
+  drawnCard = null;
+  renderCards();
+  if (!isSpecial) endTurn();
+}
+
+function manualDiscard(player, index) {
+  const set = player === 1 ? playerCards : opponentCards;
+  const card = set[index];
+  const top = discardPile[discardPile.length - 1];
+  const activeSet = currentPlayer === 1 ? playerCards : opponentCards;
+  const opponentSet = currentPlayer === 1 ? opponentCards : playerCards;
+
+  // Cas 1 : Le joueur actif essaie de défausser une carte de l'adversaire
+  if (player !== currentPlayer) {
+    if (card === top) {
+      logAction("⚠️ Défausse synchronisée réussie sur le jeu adverse : " + card);
+      discardPile.push(card);
+      document.getElementById("discard").innerText = card;
+      set.splice(index, 1); // retirer la carte de l’adversaire
+
+      if (activeSet.length > 0) {
+        const givenCard = activeSet.shift(); // donner la première carte du joueur actif
+        opponentSet.push(givenCard);
+        logAction("🎁 Joueur " + currentPlayer + " donne une carte à l'adversaire : " + givenCard);
+      }
+    } else {
+      logAction("❌ Mauvaise tentative de défausse adverse. Le joueur actif pioche une pénalité.");
+      const penalty = drawRandomCard();
+      activeSet.push(penalty);
+    }
+    renderCards();
+    return;
+  }
+
+  // Cas 2 : Le joueur actif défausse une de ses propres cartes
+  const oldPlayer = currentPlayer;
   if (card === top) {
     discardPile.push(card);
     document.getElementById("discard").innerText = card;
@@ -189,7 +525,7 @@ function resetGame() {
 
 function createRoom() {
   const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-  const username = auth.currentUser?.email?.split("@")[0] || "joueur" + Math.floor(Math.random() * 1000);
+  const username = document.getElementById("username").value.trim();
   sessionStorage.setItem("roomId", roomId);
   sessionStorage.setItem("username", username);
   set(ref(db, `games/${roomId}/players/${username}`), { connected: true });
@@ -198,20 +534,18 @@ function createRoom() {
   document.getElementById("setup").style.display = "block";
   logAction("🔧 Partie créée. Code : " + roomId);
   logAction("👤 Joueur ajouté : " + username);
-  logAction("👤 Joueur ajouté : " + username);
 }
 
 function joinRoom() {
   const roomId = document.getElementById("room-code").value.trim().toUpperCase();
-  const username = auth.currentUser?.email?.split("@")[0] || "joueur" + Math.floor(Math.random() * 1000);
-  if (!roomId) return alert("Veuillez entrer un code de partie valide.");
+  const username = document.getElementById("username").value.trim();
+  if (!roomId || !username) return alert("Veuillez entrer un code de partie et un pseudo valides.");
   sessionStorage.setItem("roomId", roomId);
   sessionStorage.setItem("username", username);
   set(ref(db, `games/${roomId}/players/${username}`), { connected: true });
   document.getElementById("config").style.display = "none";
   document.getElementById("setup").style.display = "block";
   logAction("🔗 Rejoint la partie : " + roomId);
-  logAction("👤 Joueur ajouté : " + username);
   logAction("👤 Joueur ajouté : " + username);
 }
 </script>
@@ -243,17 +577,6 @@ function joinRoom() {
 
   const roomId = sessionStorage.getItem("roomId");
   if (roomId) {
-    const turnRef = ref(db, `games/${roomId}/currentPlayer`);
-    onValue(turnRef, (snapshot) => {
-      const val = snapshot.val();
-      if (val !== null && val !== currentPlayer) {
-        currentPlayer = val;
-        updateTurnInfo();
-        renderCards();
-        logAction("🔄 Tour mis à jour : Joueur " + currentPlayer);
-      }
-    });
-  }
 
   window.register = function () {
     const email = document.getElementById("email").value;
