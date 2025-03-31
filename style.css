@@ -1,7 +1,7 @@
 body {
   font-family: 'Comic Sans MS', cursive, sans-serif;
   text-align: center;
-  background: url('https://github.com/Rmngbt/Cactus-game/blob/main/acceuil.png');
+  background: url('https://images.unsplash.com/photo-1616627989393-c4641c9c5c80?auto=format&fit=crop&w=1500&q=80');
   background-size: cover;
   background-position: center;
   color: #333;
@@ -32,7 +32,7 @@ body {
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 .card.selectable-start {
@@ -56,7 +56,15 @@ body {
   color: white;
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#welcome, #setup, #config, #lobby, #game {
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px auto;
+  max-width: 600px;
 }
 
 #log {
@@ -69,7 +77,7 @@ body {
   margin-left: auto;
   margin-right: auto;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 button {
@@ -79,7 +87,7 @@ button {
   margin: 10px 5px;
   border: none;
   border-radius: 30px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
   cursor: pointer;
   transition: transform 0.2s ease;
 }
@@ -88,31 +96,11 @@ button:hover {
   transform: scale(1.05);
 }
 
-button:nth-of-type(1) {
-  background-color: #00bfff;
-  color: white;
-}
-
-button:nth-of-type(2) {
-  background-color: #ffa500;
-  color: white;
-}
-
-button:nth-of-type(3) {
-  background-color: #32cd32;
-  color: white;
-}
-
-button:nth-of-type(4) {
-  background-color: #ff69b4;
-  color: white;
-}
-
-button#reset-game,
-button#start-game {
-  background-color: #4b0082;
-  color: white;
-}
+button:nth-of-type(1) { background-color: #00bfff; color: white; }
+button:nth-of-type(2) { background-color: #ffa500; color: white; }
+button:nth-of-type(3) { background-color: #32cd32; color: white; }
+button:nth-of-type(4) { background-color: #ff69b4; color: white; }
+button#reset-game, button#start-game { background-color: #4b0082; color: white; }
 
 #scoreboard {
   position: absolute;
@@ -126,6 +114,15 @@ button#start-game {
   font-size: 14px;
 }
 
-#setup[style*="display: block"]:not(.host-visible) {
-  display: none !important;
+input[type="text"], input[type="number"] {
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin: 5px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
 }
