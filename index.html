@@ -553,29 +553,16 @@ function createRoom() {
 function joinRoom() {
   const roomId = document.getElementById("room-code").value.trim().toUpperCase();
   const username = document.getElementById("username").value.trim();
-  
-  if (!roomId || !username) {
-    alert("Veuillez entrer un code de partie et un pseudo valides.");
-    return;
-  }
-
-  // Stocker les infos localement
+  if (!roomId || !username) return alert("Veuillez entrer un code de partie et un pseudo valides.");
   sessionStorage.setItem("roomId", roomId);
   sessionStorage.setItem("username", username);
   sessionStorage.setItem("isHost", "false");
-
-  // Ajouter le joueur à la partie dans Firebase
   set(ref(db, `games/${roomId}/players/${username}`), { connected: true });
-
-  // Afficher la salle d'attente
+  set(ref(db, `games/${roomId}/state`), "waiting"); // 🔧 assure la synchro d'état
   document.getElementById("config").style.display = "none";
   document.getElementById("lobby").style.display = "block";
   document.getElementById("lobby-room").innerText = roomId;
-
-  // Mettre à jour la liste des joueurs dans la salle
   watchLobbyPlayers(roomId);
-
-  // Log visuel
   logAction("🔗 Rejoint la partie : " + roomId);
   logAction("👤 Joueur ajouté : " + username);
 }
@@ -686,15 +673,18 @@ function safeCreateRoom() {
       }
     });
 
-    const stateRef = ref(db, `games/${roomId}/state`);
-    onValue(stateRef, (snap) => {
-      const state = snap.val();
-      if (state === "setup") {
-        document.getElementById("lobby").style.display = "none";
-        document.getElementById("setup").style.display = "block";
-        logAction("🟢 Le créateur a lancé la configuration de la partie.");
-      }
-    });
+    
+	const stateRef = ref(db, `games/${roomId}/state`);
+onValue(stateRef, (snap) => {
+  const state = snap.val();
+  if (state === "setup") {
+    const isHost = sessionStorage.getItem("isHost") === "true";
+    document.getElementById("lobby").style.display = "none";
+    document.getElementById("setup").style.display = isHost ? "block" : "none";
+    logAction("🟢 Le créateur a lancé la configuration de la partie.");
+  }
+});
+	
   }
 
   window.register = function () {
