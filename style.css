@@ -1,16 +1,66 @@
 body {
   font-family: 'Comic Sans MS', cursive, sans-serif;
-  text-align: center;
-  background: url('https://raw.githubusercontent.com/Rmngbt/Cactus-game/main/acceuil.png');
-  background-size: cover;
-  background-position: center;
-  color: #333;
   margin: 0;
   padding: 0;
+  background-color: #f5f5dc;
+  color: #333;
+  text-align: center;
 }
 
-.game-area {
-  margin-top: 20px;
+#welcome {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url('https://raw.githubusercontent.com/Rmngbt/Cactus-game/main/acceuil.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 20px;
+  color: white;
+  text-shadow: 1px 1px 4px black;
+}
+
+#welcome input,
+#welcome button {
+  margin: 10px;
+  padding: 12px 20px;
+  font-size: 18px;
+  border-radius: 12px;
+  border: none;
+}
+
+#welcome button {
+  background-color: #32cd32;
+  color: white;
+  cursor: pointer;
+}
+
+#welcome button:hover {
+  background-color: #28a428;
+}
+
+button {
+  font-family: inherit;
+  font-size: 16px;
+  padding: 10px 20px;
+  margin: 10px 5px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+#config,
+#lobby,
+#setup,
+#game {
+  margin-top: 30px;
 }
 
 .card-wrapper {
@@ -31,7 +81,6 @@ body {
   font-weight: bold;
   color: white;
   cursor: pointer;
-  transition: all 0.2s ease;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
@@ -59,48 +108,18 @@ body {
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-#welcome, #setup, #config, #lobby, #game {
-  background-color: rgba(255, 255, 255, 0.95);
-  padding: 20px;
-  border-radius: 10px;
-  margin: 20px auto;
-  max-width: 600px;
-}
-
 #log {
   margin-top: 20px;
   padding: 10px;
   border: 2px dashed #333;
   background: rgba(255, 255, 255, 0.8);
   text-align: left;
-  max-width: 500px;
+  max-width: 600px;
   margin-left: auto;
   margin-right: auto;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
-
-button {
-  font-family: 'Comic Sans MS', cursive, sans-serif;
-  font-size: 16px;
-  padding: 10px 20px;
-  margin: 10px 5px;
-  border: none;
-  border-radius: 30px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-button:hover {
-  transform: scale(1.05);
-}
-
-button:nth-of-type(1) { background-color: #00bfff; color: white; }
-button:nth-of-type(2) { background-color: #ffa500; color: white; }
-button:nth-of-type(3) { background-color: #32cd32; color: white; }
-button:nth-of-type(4) { background-color: #ff69b4; color: white; }
-button#reset-game, button#start-game { background-color: #4b0082; color: white; }
 
 #scoreboard {
   position: absolute;
@@ -112,17 +131,4 @@ button#reset-game, button#start-game { background-color: #4b0082; color: white; 
   border-radius: 8px;
   text-align: left;
   font-size: 14px;
-}
-
-input[type="text"], input[type="number"] {
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  margin: 5px;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
 }
