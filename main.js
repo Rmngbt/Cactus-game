@@ -102,25 +102,24 @@ window.startNewGame = function () {
   startNewRound();
 }
 
-
 listenToGameStateChange((state) => {
+  logAction("🧭 Changement d’état détecté : " + state);
   if (state === "setup") {
     document.getElementById("lobby").style.display = "none";
     document.getElementById("setup").style.display = "block";
     logAction("🟢 Le créateur a lancé la configuration de la partie.");
-  }
-
-  if (state === "start") {
+  } else if (state === "start") {
     const isHost = sessionStorage.getItem("isHost") === "true";
     if (!isHost) {
       document.getElementById("setup").style.display = "none";
       document.getElementById("game").style.display = "block";
       startNewRound();
       logAction("🚀 Partie lancée automatiquement !");
+    } else {
+      logAction("👑 Host a lancé la partie.");
     }
   }
 }, logAction);
-
 
 listenToTurnChanges((val) => {
   currentPlayer = val;
