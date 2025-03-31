@@ -219,3 +219,56 @@ function resetGame() {
   updateScoreboard();
   startNewRound();
 }
+// === Partie 3 : Actions pendant le jeu ===
+function drawCard() {
+  if (drawnCard !== null) return;
+  drawnCard = drawRandomCard();
+  document.getElementById("new-card").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "block";
+  logAction("🃏 Carte piochée : " + drawnCard);
+}
+
+function discardDrawnCard() {
+  if (!drawnCard) return;
+  discardPile.push(drawnCard);
+  document.getElementById("discard").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "none";
+  const isSpecial = handleSpecialCard(drawnCard);
+  drawnCard = null;
+  renderCards();
+  if (!isSpecial) endTurn();
+}
+
+function initiateDiscardSwap() {
+  if (discardPile.length === 0 || drawnCard !== null) return;
+  drawnCard = discardPile.pop();
+  document.getElementById("new-card").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "block";
+  logAction("🔁 Carte prise de la défausse : " + drawnCard);
+}
+// === Partie 4 : Cartes spéciales et fin de tour ===
+function handleSpecialCard(card) {
+  if (card === 8) {
+    specialAction = true;
+    pendingSpecial = 8;
+    document.getElementById("skip-special").style.display = "inline-block";
+    logAction("👁 Effet spécial : regardez une de vos cartes.");
+    return true;
+  }
+  if (card === 10) {
+    specialAction = true;
+    pendingSpecial = 10;
+    document.getElementById("skip-special").style.display = "inline-block";
+    logAction("🔍 Effet spécial : regardez une carte adverse.");
+    return true;
+  }
+  if (card === "V") {
+    specialAction = true;
+    pendingSpecial = "V";
+    document.getElementById("skip-special").style.display = "inline-block";
+    logAction("🔄 Effet spécial : échangez une carte avec l'adversaire.");
+    return true;
+  }
+  return false;
+}
+
