@@ -1,6 +1,7 @@
 // main.js
-import { startNewRound } from './script.js';
+
 import { syncTurnToFirebase, listenToTurnChanges, listenToGameStateChange, triggerSetupState } from './firebase-sync.js';
+import { startNewRound } from './script.js';
 
 let cardCount = 4, targetScore = 3, startVisibleCount = 2;
 let playerCards = [], opponentCards = [], discardPile = [], drawnCard = null;
@@ -94,8 +95,28 @@ window.startNewGame = function () {
   score2 = 0;
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
+  import('./firebase-init.js').then(({ db, ref, set }) => {
+    const roomId = sessionStorage.getItem("roomId");
+    set(ref(db, `games/${roomId}/state`), "start");
+  });
   startNewRound();
 }
+
+listenToGameStateChange((state) => {
+  if (state === "setup") {
+    document.getElementById("lobby").style.display = "none";
+    document.getElementById("setup").style.display = "block";
+    logAction("🟢 Le créateur a lancé la configuration de la partie.");
+  } else if (state === "start") {
+    document.getElementById("setup").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    startNewRound();
+  }
+}, logAction);
+
+listenToTurnChanges((val) => {
+  currentPlayer = val;
+}, renderCards, logAction, updateTurnInfo);
 
 function logAction(msg) {
   const logDiv = document.getElementById("log");
@@ -103,4 +124,11 @@ function logAction(msg) {
   logDiv.innerHTML += `<p>${msg}</p>`;
 }
 
-// À compléter avec toutes les règles de jeu, à la suite, si validé
+function updateTurnInfo() {
+  const turnInfo = document.getElementById("turn-info");
+  if (turnInfo) turnInfo.innerText = "Tour du joueur " + currentPlayer;
+}
+
+function renderCards() {
+  // Tu peux ici appeler des fonctions depuis script.js si besoin
+}
