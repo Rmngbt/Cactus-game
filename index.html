@@ -553,17 +553,29 @@ function createRoom() {
 function joinRoom() {
   const roomId = document.getElementById("room-code").value.trim().toUpperCase();
   const username = document.getElementById("username").value.trim();
-  if (!roomId || !username) return alert("Veuillez entrer un code de partie et un pseudo valides.");
+  
+  if (!roomId || !username) {
+    alert("Veuillez entrer un code de partie et un pseudo valides.");
+    return;
+  }
+
+  // Stocker les infos localement
   sessionStorage.setItem("roomId", roomId);
   sessionStorage.setItem("username", username);
   sessionStorage.setItem("isHost", "false");
+
+  // Ajouter le joueur à la partie dans Firebase
   set(ref(db, `games/${roomId}/players/${username}`), { connected: true });
+
+  // Afficher la salle d'attente
   document.getElementById("config").style.display = "none";
   document.getElementById("lobby").style.display = "block";
   document.getElementById("lobby-room").innerText = roomId;
+
+  // Mettre à jour la liste des joueurs dans la salle
   watchLobbyPlayers(roomId);
-  logAction("🔗 Rejoint la partie : " + roomId);
-  logAction("👤 Joueur ajouté : " + username);
+
+  // Log visuel
   logAction("🔗 Rejoint la partie : " + roomId);
   logAction("👤 Joueur ajouté : " + username);
 }
@@ -571,21 +583,37 @@ function joinRoom() {
 function watchLobbyPlayers(roomId) {
   const lobbyDiv = document.getElementById("lobby-players");
   const startBtn = document.getElementById("start-game");
+
   const playersRef = ref(db, `games/${roomId}/players`);
   const hostRef = ref(db, `games/${roomId}/host`);
+
   onValue(hostRef, (snap) => {
     const host = snap.val();
     const username = sessionStorage.getItem("username");
-    startBtn.style.display = (host === username) ? "inline-block" : "none";
+    if (host === username) {
+      startBtn.style.display = "inline-block";
+    } else {
+      startBtn.style.display = "none";
+    }
   });
+
   onValue(playersRef, (snapshot) => {
     const players = snapshot.val();
     if (!players) return;
-    const list = Object.keys(players).map(name => `<li>${name}</li>`).join("");
+
+    const list = Object.keys(players)
+      .map(name => `<li>${name}</li>`)
+      .join("");
+    
     lobbyDiv.innerHTML = `<ul>${list}</ul>`;
-    if (Object.keys(players).length >= 2) startBtn.style.display = "inline-block";
+
+    // Afficher bouton de lancement si 2 joueurs ou plus
+    if (Object.keys(players).length >= 2) {
+      startBtn.style.display = "inline-block";
+    }
   });
 }
+
 
 function launchSetup() {
   const roomId = sessionStorage.getItem("roomId");
@@ -603,6 +631,8 @@ function safeCreateRoom() {
 }
 </script>
   <div id="log"></div>
+
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
   import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
@@ -625,53 +655,47 @@ function safeCreateRoom() {
   window.set = set;
   window.onValue = onValue;
 
-  // ✅ Activer les boutons seulement après initialisation Firebase
-  document.getElementById("btn-create").disabled = false;
-  if (document.getElementById("btn-joconst roomId =in")) document.getElementById("btn-join").disabled = false;
   const auth = getAuth(app);
 
+  // Active les boutons une fois Firebase prêt
+  document.getElementById("btn-create").disabled = false;
+  if (document.getElementById("btn-join")) {
+    document.getElementById("btn-join").disabled = false;
+  }
+
+  // Fonction pour synchroniser le tour de jeu
   window.syncTurnToFirebase = function (turn) {
     const roomId = sessionStorage.getItem("roomId");
     if (!roomId) return;
     set(ref(db, `games/${roomId}/currentPlayer`), turn);
   };
 
-if (roomId) {
-  const turnRef = ref(db, `games/${roomId}/currentPlayer`);
-  onValue(turnRef, (snapshot) => {
-    const val = snapshot.val();
-    if (val !== null && val !== currentPlayer) {
-      currentPlayer = val;
-      updateTurnInfo();
-      renderCards();
-      logAction("🔄 Tour mis à jour : Joueur " + currentPlayer);
-    }
-  });
+  // Récupération du roomId une seule fois ici
+  const roomId = sessionStorage.getItem("roomId");
 
-  const stateRef = ref(db, `games/${roomId}/state`);
-  onValue(stateRef, (snap) => {
-    const state = snap.val();
-    if (state === "setup") {
-      document.getElementById("lobby").style.display = "none";
-      document.getElementById("setup").style.display = "block";
-      logAction("🟢 Le créateur a lancé la configuration de la partie.");
-    }
-  });
-}
+  // Synchronisation du tour
+  if (roomId) {
+    const turnRef = ref(db, `games/${roomId}/currentPlayer`);
+    onValue(turnRef, (snapshot) => {
+      const val = snapshot.val();
+      if (val !== null && val !== currentPlayer) {
+        currentPlayer = val;
+        updateTurnInfo();
+        renderCards();
+        logAction("🔄 Tour mis à jour : Joueur " + currentPlayer);
+      }
+    });
 
-
-
-  const stateRef = ref(db, `games/${roomId}/state`);
-  onValue(stateRef, (snap) => {
-    const state = snap.val();
-    if (state === "setup") {
-      document.getElementById("lobby").style.display = "none";
-      document.getElementById("setup").style.display = "block";
-      logAction("🟢 Le créateur a lancé la configuration de la partie.");
-    }
-  });
-
-  
+    const stateRef = ref(db, `games/${roomId}/state`);
+    onValue(stateRef, (snap) => {
+      const state = snap.val();
+      if (state === "setup") {
+        document.getElementById("lobby").style.display = "none";
+        document.getElementById("setup").style.display = "block";
+        logAction("🟢 Le créateur a lancé la configuration de la partie.");
+      }
+    });
+  }
 
   window.register = function () {
     const email = document.getElementById("email").value;
@@ -701,5 +725,9 @@ if (roomId) {
     }
   });
 </script>
+
+
+
+
 </body>
 </html>
