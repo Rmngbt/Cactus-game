@@ -47,7 +47,7 @@ function renderPlayerCards(containerId, cards, playerId) {
 }
 
 // === Partie 2 : Début de partie et tours ===
-function startNewRound() {
+export function startNewRound() {
   drawnCard = null;
   discardPile = [];
   specialAction = false;

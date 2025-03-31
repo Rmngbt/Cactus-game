@@ -1,5 +1,5 @@
 // main.js
-
+import { startNewRound } from './script.js';
 import { syncTurnToFirebase, listenToTurnChanges, listenToGameStateChange, triggerSetupState } from './firebase-sync.js';
 
 let cardCount = 4, targetScore = 3, startVisibleCount = 2;
