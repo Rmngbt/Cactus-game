@@ -1,71 +1,43 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cactus - Jeu de Cartes</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="welcome" class="overlay">
-    <h1>Bienvenue sur Cactus 🌵</h1>
-    <p>Connecte-toi pour rejoindre ou créer une partie !</p>
-    <input type="text" id="username" placeholder="Pseudo">
-    <button onclick="login()">Connexion</button>
-  </div>
-
   <div id="scoreboard">
-    <strong>Score</strong><br>
-    Joueur 1 : <span id="score-j1">0</span><br>
-    Joueur 2 : <span id="score-j2">0</span><br>
+    <strong>Score</strong><br />
+    Joueur 1 : <span id="score-j1">0</span><br />
+    Joueur 2 : <span id="score-j2">0</span><br />
     Manche : <span id="manche-count">1</span>
   </div>
 
-  <div id="config" class="panel hidden">
-    <h3>Créer ou rejoindre une partie</h3>
-    <button onclick="safeCreateRoom()" id="btn-create" disabled>Créer une partie</button>
-    <br><br>
-    <input type="text" id="room-code" placeholder="Code de partie">
-    <button onclick="joinRoom()" id="btn-join" disabled>Rejoindre une partie</button>
-  </div>
-
-  <div id="lobby" class="panel hidden">
-    <h3>Salle d’attente</h3>
-    <p>Code de partie : <strong id="lobby-room"></strong></p>
-    <div id="lobby-players">En attente de joueurs...</div>
-    <button onclick="launchSetup()" id="start-game" class="hidden">Lancer la partie</button>
-  </div>
-
-  <div id="setup" class="panel hidden">
-    <h3>Configuration de la partie</h3>
-    <label>Nombre de cartes par joueur : <input type="number" id="card-count" min="3" max="7" value="4"></label><br><br>
-    <label>Nombre de cartes visibles au début : <input type="number" id="visible-count" min="0" max="7" value="2"></label><br><br>
-    <label>Score pour gagner : <input type="number" id="target-score" min="1" max="10" value="3"></label><br><br>
-    <button onclick="startNewGame()">Lancer la partie</button>
-  </div>
-
-  <div id="game" class="hidden">
+  <div id="game">
     <div class="game-area">
       <h2>Joueur 1</h2>
       <div id="player-cards"></div>
+
       <h2>Joueur 2</h2>
       <div id="opponent-cards"></div>
 
       <button onclick="drawCard()">Piocher une carte</button>
       <button onclick="initiateDiscardSwap()">Prendre de la défausse</button>
-      <button id="skip-special" class="hidden" onclick="skipSpecial()">Passer l'action spéciale</button>
+      <button id="skip-special" style="display:none;" onclick="skipSpecial()">Passer l'action spéciale</button>
       <button onclick="declareCactus()">Cactus</button>
 
       <div id="discard-pile">Défausse: <span id="discard">Vide</span></div>
       <p id="turn-info">Tour du joueur 1</p>
-      <p id="drawn-card" class="hidden" onclick="discardDrawnCard()">Carte piochée: <span id="new-card"></span></p>
+      <p id="drawn-card" style="display:none; cursor:pointer;" onclick="discardDrawnCard()">Carte piochée: <span id="new-card"></span></p>
+
+      <button onclick="startNewRound()">Nouvelle manche</button>
+      <button id="reset-game" onclick="resetGame()" style="display:none; margin-top:10px;">Nouvelle partie</button>
     </div>
-    <button onclick="startNewRound()">Nouvelle manche</button>
-    <button id="reset-game" class="hidden" onclick="resetGame()">Nouvelle partie</button>
   </div>
 
   <div id="log"></div>
 
-  <script type="module" src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
