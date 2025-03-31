@@ -1,9 +1,12 @@
-// FirebaseSync.js
+import { db, ref, set, onValue, get } from "./firebase-init.js";
 
-// Ce fichier gère la synchronisation des tours et de l'état entre les joueurs via Firebase
-import { ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+export function syncTurnToFirebase(turn) {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+  set(ref(db, `games/${roomId}/currentPlayer`), turn);
+}
 
-export function initializeFirebaseSync(db, onTurnChange, onStateChange) {
+export function listenForTurnChange(callback) {
   const roomId = sessionStorage.getItem("roomId");
   if (!roomId) return;
 
@@ -11,27 +14,63 @@ export function initializeFirebaseSync(db, onTurnChange, onStateChange) {
   onValue(turnRef, (snapshot) => {
     const val = snapshot.val();
     if (val !== null) {
-      onTurnChange(val);
-    }
-  });
-
-  const stateRef = ref(db, `games/${roomId}/state`);
-  onValue(stateRef, (snapshot) => {
-    const state = snapshot.val();
-    if (state !== null) {
-      onStateChange(state);
+      callback(val);
     }
   });
 }
 
-export function syncTurnToFirebase(db, turn) {
-  const roomId = sessionStorage.getItem("roomId");
-  if (!roomId) return;
-  set(ref(db, `games/${roomId}/currentPlayer`), turn);
-}
-
-export function setGameState(db, state) {
+export function setGameState(state) {
   const roomId = sessionStorage.getItem("roomId");
   if (!roomId) return;
   set(ref(db, `games/${roomId}/state`), state);
+}
+
+export function listenForGameStateChange(callback) {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+
+  const stateRef = ref(db, `games/${roomId}/state`);
+  onValue(stateRef, (snap) => {
+    const state = snap.val();
+    if (state !== null) {
+      callback(state);
+    }
+  });
+}
+
+export function registerPlayerInRoom(username, isHost) {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+
+  const playersRef = ref(db, `games/${roomId}/players/${username}`);
+  set(playersRef, { connected: true });
+
+  if (isHost) {
+    set(ref(db, `games/${roomId}/host`), username);
+    set(ref(db, `games/${roomId}/currentPlayer`), 1);
+  }
+}
+
+export function listenForLobbyPlayers(callback) {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+
+  const playersRef = ref(db, `games/${roomId}/players`);
+  onValue(playersRef, (snapshot) => {
+    const players = snapshot.val();
+    if (players) {
+      callback(Object.keys(players));
+    }
+  });
+}
+
+export function listenForHostChange(callback) {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+
+  const hostRef = ref(db, `games/${roomId}/host`);
+  onValue(hostRef, (snapshot) => {
+    const host = snapshot.val();
+    callback(host);
+  });
 }
