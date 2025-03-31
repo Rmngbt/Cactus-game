@@ -1,0 +1,131 @@
+body {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  text-align: center;
+  background: url('https://github.com/Rmngbt/Cactus-game/blob/main/acceuil.png');
+  background-size: cover;
+  background-position: center;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+.game-area {
+  margin-top: 20px;
+}
+
+.card-wrapper {
+  display: inline-block;
+  margin: 10px;
+  position: relative;
+}
+
+.card {
+  width: 80px;
+  height: 120px;
+  background: #4a90e2;
+  border-radius: 10px;
+  border: 2px solid white;
+  text-align: center;
+  line-height: 120px;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.card.selectable-start {
+  outline: 3px dashed yellow;
+}
+
+.card.highlight {
+  outline: 3px solid lime;
+  box-shadow: 0 0 10px lime;
+}
+
+.discard-btn {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: crimson;
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+#log {
+  margin-top: 20px;
+  padding: 10px;
+  border: 2px dashed #333;
+  background: rgba(255, 255, 255, 0.8);
+  text-align: left;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+button {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-size: 16px;
+  padding: 10px 20px;
+  margin: 10px 5px;
+  border: none;
+  border-radius: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+button:nth-of-type(1) {
+  background-color: #00bfff;
+  color: white;
+}
+
+button:nth-of-type(2) {
+  background-color: #ffa500;
+  color: white;
+}
+
+button:nth-of-type(3) {
+  background-color: #32cd32;
+  color: white;
+}
+
+button:nth-of-type(4) {
+  background-color: #ff69b4;
+  color: white;
+}
+
+button#reset-game,
+button#start-game {
+  background-color: #4b0082;
+  color: white;
+}
+
+#scoreboard {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 14px;
+}
+
+#setup[style*="display: block"]:not(.host-visible) {
+  display: none !important;
+}
