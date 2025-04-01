@@ -1,29 +1,26 @@
 // main.js
 
 import {
+  startNewRound,
+  startNewGame,
   selectCard,
   drawCard,
   initiateDiscardSwap,
   skipSpecial,
   declareCactus,
-  startNewRound,
   resetGame,
   manualDiscard,
-  discardDrawnCard,
-  logAction,
-  updateTurnInfo,
-  renderCards,
-  cardCount,
-  targetScore,
-  startVisibleCount,
-  score1,
-  score2,
-  mancheCount
+  discardDrawnCard
 } from './script.js';
 
 import { syncTurnToFirebase, listenToTurnChanges, listenToGameStateChange } from './firebase-sync.js';
 import { login } from './AuthAndLobby.js';
 import { setupRoomListeners } from './RoomManager.js';
+
+window.startNewGame = () => {
+  startNewRound(); // ou ta logique de nouvelle partie complète
+};
+
 
 window.selectCard = selectCard;
 window.drawCard = drawCard;

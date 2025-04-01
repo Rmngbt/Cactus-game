@@ -1,6 +1,5 @@
 // === AuthAndLobby.js ===
 
-import { logAction } from "./logUtils.js";
 import { logAction } from './script.js';
 
 
@@ -10,7 +9,8 @@ function login() {
   sessionStorage.setItem("username", username);
   document.getElementById("welcome").style.display = "none";
   document.getElementById("config").style.display = "block";
-  
+    logAction(`👋 Bienvenue, ${username} !`);
+
 }
 
 function createRoom() {
