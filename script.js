@@ -1,4 +1,5 @@
 // script.js (fusionné)
+console.log("✅ script.js bien chargé");
 
 // === Firebase Init ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
@@ -90,6 +91,16 @@ function watchLobbyPlayers(roomId) {
     if (Object.keys(players).length >= 2) startBtn.style.display = "inline-block";
   });
 }
+
+function launchSetup() {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+  set(ref(db, `games/${roomId}/state`), "setup");
+  document.getElementById("lobby").style.display = "none";
+  document.getElementById("setup").style.display = "block";
+  logAction("🟢 Configuration de la partie prête.");
+}
+window.launchSetup = launchSetup;
 
 function triggerSetupState() {
   const roomId = sessionStorage.getItem("roomId");
