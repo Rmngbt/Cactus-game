@@ -169,6 +169,20 @@ function startNewGame() {
 }
 window.startNewGame = startNewGame;
 
+listenToGameStateChange(() => {
+  document.getElementById("lobby").style.display = "none";
+  document.getElementById("setup").style.display = "block";
+  logAction("⚙️ Un autre joueur a lancé la configuration.");
+});
+
+listenToTurnChanges((newTurn) => {
+  currentPlayer = newTurn;
+  updateTurnInfo();
+  renderCards();
+  logAction("🔄 Tour synchronisé : joueur " + currentPlayer);
+});
+
+
 function updateTurnInfo() {
   const info = document.getElementById("turn-info");
   if (info) info.innerText = "Tour du joueur " + currentPlayer;
