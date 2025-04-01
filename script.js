@@ -19,7 +19,8 @@ function updateScoreboard() {
 }
 
 function logAction(msg) {
-  document.getElementById("log").innerHTML += `<p>${msg}</p>`;
+  const log = document.getElementById("log");
+  if (log) log.innerHTML += `<p>${msg}</p>`;
 }
 
 function updateTurnInfo() {
@@ -165,6 +166,89 @@ function discardDrawnCard() {
   if (!isSpecial) endTurn();
 }
 
+function handleSpecialCard(card) {
+  if (card === 8) {
+    specialAction = true;
+    pendingSpecial = 8;
+    document.getElementById("skip-special").style.display = "inline-block";
+    logAction("👁 Effet spécial : regardez une de vos cartes.");
+    return true;
+  }
+  if (card === 10) {
+    specialAction = true;
+    pendingSpecial = 10;
+    document.getElementById("skip-special").style.display = "inline-block";
+    logAction("🔍 Effet spécial : regardez une carte adverse.");
+    return true;
+  }
+  if (card === "V") {
+    specialAction = true;
+    pendingSpecial = "V";
+    document.getElementById("skip-special").style.display = "inline-block";
+    logAction("🔄 Effet spécial : échangez une carte avec l'adversaire.");
+    return true;
+  }
+  return false;
+}
+function revealInitialCards(player) {
+  const set = player === 1 ? playerCards : opponentCards;
+  const containerId = player === 1 ? "player-cards" : "opponent-cards";
+  const container = document.getElementById(containerId).children;
+  let toReveal = Math.min(startVisibleCount, set.length);
+  let revealed = 0;
+
+  logAction(`👆 Joueur ${player}, choisissez ${toReveal} carte(s) à regarder.`);
+  for (let i = 0; i < container.length; i++) {
+    const cardDiv = container[i].querySelector(".card");
+    cardDiv.classList.add("selectable-start");
+
+    cardDiv.addEventListener("click", function handleClick() {
+      if (revealed >= toReveal || parseInt(cardDiv.getAttribute("data-player")) !== player) return;
+      const index = parseInt(cardDiv.getAttribute("data-index"));
+      cardDiv.innerText = set[index];
+      revealed++;
+
+      if (revealed === toReveal) {
+        logAction(`👀 Joueur ${player} a regardé ses ${toReveal} cartes.`);
+        setTimeout(() => {
+          for (let j = 0; j < container.length; j++) {
+            const c = container[j].querySelector(".card");
+            c.classList.remove("selectable-start");
+            c.innerText = "?";
+          }
+          if (player === 1) setTimeout(() => revealInitialCards(2), 500);
+        }, 5000);
+      }
+    });
+  }
+}
+
+function startNewRound() {
+  logDivider("🎮 Nouvelle manche");
+  logAction(`🔁 Manche ${mancheCount} commencée.`);
+
+  playerCards = Array.from({ length: cardCount }, drawRandomCard);
+  opponentCards = Array.from({ length: cardCount }, drawRandomCard);
+  discardPile = [];
+  drawnCard = null;
+  specialAction = false;
+  pendingSpecial = null;
+  selectedForSwap = null;
+  cactusDeclared = false;
+  cactusPlayer = null;
+  currentPlayer = 1;
+
+  renderCards();
+  updateTurnInfo();
+  document.getElementById("discard").innerText = "Vide";
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("skip-special").style.display = "none";
+
+  setTimeout(() => revealInitialCards(1), 300);
+}
+
+
+
 // Rendre accessibles depuis le HTML
 window.selectCard = selectCard;
 window.drawCard = drawCard;
@@ -175,4 +259,3 @@ window.startNewRound = startNewRound;
 window.resetGame = resetGame;
 window.manualDiscard = manualDiscard;
 window.discardDrawnCard = discardDrawnCard;
-window.startNewRound = startNewRound;
