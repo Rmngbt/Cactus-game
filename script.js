@@ -178,6 +178,16 @@ function renderCards() {
   const container1 = document.getElementById("player-cards");
   const container2 = document.getElementById("opponent-cards");
   if (!container1 || !container2) return;
-  container1.innerHTML = playerCards.map((c, i) => `<div class="card" data-index="${i}" data-player="1">?</div>`).join("");
-  container2.innerHTML = opponentCards.map((c, i) => `<div class="card" data-index="${i}" data-player="2">?</div>`).join("");
+
+  container1.innerHTML = playerCards.map((c, i) => `
+    <div class="card-wrapper">
+      <button class="discard-btn" onclick="manualDiscard(1, ${i})">🗑</button>
+      <div class="card" data-index="${i}" data-player="1" onclick="selectCard(this)">?</div>
+    </div>`).join("");
+
+  container2.innerHTML = opponentCards.map((c, i) => `
+    <div class="card-wrapper">
+      <button class="discard-btn" onclick="manualDiscard(2, ${i})">🗑</button>
+      <div class="card" data-index="${i}" data-player="2" onclick="selectCard(this)">?</div>
+    </div>`).join("");
 }
