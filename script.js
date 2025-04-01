@@ -1,263 +1,136 @@
-// script.js
+// script.js (fusionné)
 
-let cardCount = 4, targetScore = 3, startVisibleCount = 2;
-let playerCards = [], opponentCards = [], discardPile = [], drawnCard = null;
-let currentPlayer = 1, specialAction = false, pendingSpecial = null, selectedForSwap = null;
-let cactusPlayer = null, cactusDeclared = false, cactusCountdown = 0;
-let score1 = 0, score2 = 0;
-let mancheCount = 1;
-const cardValues = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+// === Firebase Init ===
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
 
-function drawRandomCard() {
-  return cardValues[Math.floor(Math.random() * cardValues.length)];
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyBd2O4MWVNlY5MOVffdcvMrkj2lLxJcdv0",
+  authDomain: "cactus-game-12ae9.firebaseapp.com",
+  projectId: "cactus-game-12ae9",
+  storageBucket: "cactus-game-12ae9.appspot.com",
+  messagingSenderId: "852427558969",
+  appId: "1:852427558969:web:0b292c74c6305dc348fde8",
+  databaseURL: "https://cactus-game-12ae9-default-rtdb.firebaseio.com/"
+};
 
-function updateScoreboard() {
-  document.getElementById("score-j1").innerText = score1;
-  document.getElementById("score-j2").innerText = score2;
-  document.getElementById("manche-count").innerText = mancheCount;
-}
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
 
+// === Utilitaires ===
 function logAction(msg) {
   const log = document.getElementById("log");
-  const timestamp = new Date().toLocaleTimeString();
-  if (log) log.innerHTML += `<p><strong>[${timestamp}]</strong> ${msg}</p>`;
+  if (log) log.innerHTML += `<p>${msg}</p>`;
+  console.log(msg);
 }
 
-function logDivider(title) {
-  const log = document.getElementById("log");
-  if (log) log.innerHTML += `<hr><h4>${title}</h4>`;
+// === Auth et connexion ===
+function login() {
+  const usernameInput = document.getElementById("username");
+  const username = usernameInput.value.trim();
+  if (!username) return alert("Entre un pseudo pour continuer.");
+  sessionStorage.setItem("username", username);
+  document.getElementById("welcome").style.display = "none";
+  document.getElementById("config").style.display = "block";
+  logAction("👋 Bienvenue, " + username + " !");
 }
+window.login = login;
 
-function updateTurnInfo() {
-  document.getElementById("turn-info").innerText = "Tour du joueur " + currentPlayer;
+// === Gestion de salle ===
+function safeCreateRoom() {
+  const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const username = sessionStorage.getItem("username");
+  sessionStorage.setItem("roomId", roomId);
+  sessionStorage.setItem("isHost", "true");
+  set(ref(db, `games/${roomId}/players/${username}`), { connected: true });
+  set(ref(db, `games/${roomId}/host`), username);
+  set(ref(db, `games/${roomId}/currentPlayer`), 1);
+  document.getElementById("config").style.display = "none";
+  document.getElementById("lobby").style.display = "block";
+  document.getElementById("lobby-room").innerText = roomId;
+  watchLobbyPlayers(roomId);
+  logAction("🔧 Partie créée. Code : " + roomId);
 }
+window.safeCreateRoom = safeCreateRoom;
 
-function clearHighlights() {
-  document.querySelectorAll('.card').forEach(el => el.classList.remove('highlight'));
+function joinRoom() {
+  const roomId = document.getElementById("room-code").value.trim().toUpperCase();
+  const username = sessionStorage.getItem("username");
+  if (!roomId || !username) return alert("Veuillez entrer un code de partie et un pseudo valides.");
+  sessionStorage.setItem("roomId", roomId);
+  sessionStorage.setItem("isHost", "false");
+  set(ref(db, `games/${roomId}/players/${username}`), { connected: true });
+  document.getElementById("config").style.display = "none";
+  document.getElementById("lobby").style.display = "block";
+  document.getElementById("lobby-room").innerText = roomId;
+  watchLobbyPlayers(roomId);
+  logAction("🔗 Rejoint la partie : " + roomId);
 }
+window.joinRoom = joinRoom;
 
-function renderCards() {
-  renderPlayerCards("player-cards", playerCards, 1);
-  renderPlayerCards("opponent-cards", opponentCards, 2);
-}
+function watchLobbyPlayers(roomId) {
+  const lobbyDiv = document.getElementById("lobby-players");
+  const startBtn = document.getElementById("start-game");
+  const playersRef = ref(db, `games/${roomId}/players`);
+  const hostRef = ref(db, `games/${roomId}/host`);
 
-function renderPlayerCards(containerId, cards, playerId) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = "";
-  cards.forEach((_, index) => {
-    container.innerHTML += `
-      <div class="card-wrapper">
-        <button class="discard-btn" onclick="manualDiscard(${playerId}, ${index})">🖑</button>
-        <div class="card" data-player="${playerId}" data-index="${index}" onclick="selectCard(this)">?</div>
-      </div>`;
+  onValue(hostRef, (snap) => {
+    const host = snap.val();
+    const username = sessionStorage.getItem("username");
+    startBtn.style.display = host === username ? "inline-block" : "none";
+  });
+
+  onValue(playersRef, (snapshot) => {
+    const players = snapshot.val();
+    if (!players) return;
+    const list = Object.keys(players).map(name => `<li>${name}</li>`).join("");
+    lobbyDiv.innerHTML = `<ul>${list}</ul>`;
+    if (Object.keys(players).length >= 2) startBtn.style.display = "inline-block";
   });
 }
 
-function selectCard(cardEl) {
-  clearHighlights();
-  cardEl.classList.add('highlight');
-  const index = parseInt(cardEl.dataset.index);
-  const player = parseInt(cardEl.dataset.player);
-  const set = player === 1 ? playerCards : opponentCards;
-  if (specialAction && pendingSpecial === 8 && player === currentPlayer) {
-    if (selectedForSwap !== null) return;
-    selectedForSwap = true;
-    cardEl.innerText = set[index];
-    logAction(`👁 [Joueur ${currentPlayer}] a révélé : ${set[index]}`);
-    setTimeout(() => {
-      cardEl.innerText = "?";
-      selectedForSwap = null;
-      skipSpecial();
-    }, 5000);
-    return;
-  }
-  if (specialAction && pendingSpecial === 10 && player !== currentPlayer) {
-    if (selectedForSwap !== null) return;
-    selectedForSwap = true;
-    cardEl.innerText = set[index];
-    logAction(`🔍 [Joueur ${currentPlayer}] a vu une carte adverse : ${set[index]}`);
-    setTimeout(() => {
-      cardEl.innerText = "?";
-      selectedForSwap = null;
-      skipSpecial();
-    }, 5000);
-    return;
-  }
-  if (specialAction && pendingSpecial === "V") {
-    if (!selectedForSwap && player === currentPlayer) {
-      selectedForSwap = { player, index };
-      logAction("👉 Choisissez une carte adverse à échanger.");
-      return;
-    }
-    if (selectedForSwap && player !== currentPlayer) {
-      const setA = selectedForSwap.player === 1 ? playerCards : opponentCards;
-      const setB = player === 1 ? playerCards : opponentCards;
-      const temp = setA[selectedForSwap.index];
-      setA[selectedForSwap.index] = setB[index];
-      setB[index] = temp;
-      selectedForSwap = null;
-      logAction("🔄 Cartes échangées.");
-      renderCards();
-      skipSpecial();
-      return;
-    }
-  }
-  if (player !== currentPlayer || drawnCard === null) return;
-  const replaced = set[index];
-  set[index] = drawnCard;
-  discardPile.push(replaced);
-  document.getElementById("discard").innerText = replaced;
-  drawnCard = null;
-  document.getElementById("drawn-card").style.display = "none";
-  logAction(`🔄 [Joueur ${currentPlayer}] échange : ${replaced} ↔ ${set[index]}`);
-  const isSpecial = handleSpecialCard(replaced);
-  renderCards();
-  if (!isSpecial) endTurn();
+function triggerSetupState() {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+  set(ref(db, `games/${roomId}/state`), "setup");
+  document.getElementById("lobby").style.display = "none";
+  document.getElementById("setup").style.display = "block";
+  logAction("🟢 Configuration de la partie prête.");
+}
+window.triggerSetupState = triggerSetupState;
+
+// === Synchronisation ===
+function syncTurnToFirebase(turn) {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+  set(ref(db, `games/${roomId}/currentPlayer`), turn);
 }
 
-function drawCard() {
-  if (drawnCard !== null) return;
-  drawnCard = drawRandomCard();
-  document.getElementById("new-card").innerText = drawnCard;
-  document.getElementById("drawn-card").style.display = "block";
-  logAction(`🃏 [Joueur ${currentPlayer}] pioche : ${drawnCard}`);
+function listenToGameStateChange(setupCallback) {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+  const stateRef = ref(db, `games/${roomId}/state`);
+
+  onValue(stateRef, (snap) => {
+    const state = snap.val();
+    if (state === "setup") setupCallback();
+  });
 }
 
-function initiateDiscardSwap() {
-  if (discardPile.length === 0 || drawnCard !== null) return;
-  drawnCard = discardPile.pop();
-  document.getElementById("new-card").innerText = drawnCard;
-  document.getElementById("drawn-card").style.display = "block";
-  logAction(`🔁 [Joueur ${currentPlayer}] prend dans la défausse : ${drawnCard}`);
+function listenToTurnChanges(callback) {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+  const turnRef = ref(db, `games/${roomId}/currentPlayer`);
+
+  onValue(turnRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val !== null) callback(val);
+  });
 }
 
-function skipSpecial() {
-  specialAction = false;
-  pendingSpecial = null;
-  selectedForSwap = null;
-  document.getElementById("skip-special").style.display = "none";
-  logAction("⏭ Action spéciale ignorée");
-  endTurn();
-}
+// 🎮 Ici tu peux ajouter le reste de ta logique de jeu classique à la suite (drawCard, discardDrawnCard, etc.)
 
-function declareCactus() {
-  if (cactusDeclared) return;
-  cactusDeclared = true;
-  cactusPlayer = currentPlayer;
-  logDivider("🌵 Cactus annoncé !");
-  logAction(`🌵 Joueur ${currentPlayer} a déclaré Cactus !`);
-  endTurn();
-}
-
-function startNewRound() {
-  logDivider("🎮 Nouvelle manche");
-  logAction(`🔁 Manche ${mancheCount} commencée.`);
-  playerCards = Array.from({ length: cardCount }, drawRandomCard);
-  opponentCards = Array.from({ length: cardCount }, drawRandomCard);
-  discardPile = [];
-  drawnCard = null;
-  specialAction = false;
-  pendingSpecial = null;
-  selectedForSwap = null;
-  cactusDeclared = false;
-  cactusPlayer = null;
-  currentPlayer = 1;
-  renderCards();
-  updateTurnInfo();
-  document.getElementById("discard").innerText = "Vide";
-  document.getElementById("drawn-card").style.display = "none";
-  document.getElementById("skip-special").style.display = "none";
-  setTimeout(() => revealInitialCards(1), 300);
-}
-
-function revealInitialCards(player) {
-  const set = player === 1 ? playerCards : opponentCards;
-  const containerId = player === 1 ? "player-cards" : "opponent-cards";
-  const container = document.getElementById(containerId).children;
-  let toReveal = Math.min(startVisibleCount, set.length);
-  let revealed = 0;
-  logAction(`👆 Joueur ${player}, choisissez ${toReveal} carte(s) à regarder.`);
-  for (let i = 0; i < container.length; i++) {
-    const cardDiv = container[i].querySelector(".card");
-    cardDiv.classList.add("selectable-start");
-    cardDiv.addEventListener("click", function handleClick() {
-      if (revealed >= toReveal || parseInt(cardDiv.getAttribute("data-player")) !== player) return;
-      const index = parseInt(cardDiv.getAttribute("data-index"));
-      cardDiv.innerText = set[index];
-      revealed++;
-      if (revealed === toReveal) {
-        logAction(`👀 Joueur ${player} a regardé ses ${toReveal} cartes.`);
-        setTimeout(() => {
-          for (let j = 0; j < container.length; j++) {
-            const c = container[j].querySelector(".card");
-            c.classList.remove("selectable-start");
-            c.innerText = "?";
-          }
-          if (player === 1) setTimeout(() => revealInitialCards(2), 500);
-        }, 5000);
-      }
-    });
-  }
-}
-
-function resetGame() {
-  logDivider("🔄 Réinitialisation");
-  logAction("🧼 Jeu réinitialisé.");
-}
-
-function manualDiscard(player, index) {
-  logAction(`🗑 [Joueur ${player}] défausse la carte ${index}`);
-}
-
-function discardDrawnCard() {
-  if (!drawnCard) return;
-  discardPile.push(drawnCard);
-  document.getElementById("discard").innerText = drawnCard;
-  document.getElementById("drawn-card").style.display = "none";
-  const isSpecial = handleSpecialCard(drawnCard);
-  drawnCard = null;
-  renderCards();
-  if (!isSpecial) endTurn();
-}
-
-function handleSpecialCard(card) {
-  if (card === 8) {
-    specialAction = true;
-    pendingSpecial = 8;
-    document.getElementById("skip-special").style.display = "inline-block";
-    logAction("👁 Effet spécial : regardez une de vos cartes.");
-    return true;
-  }
-  if (card === 10) {
-    specialAction = true;
-    pendingSpecial = 10;
-    document.getElementById("skip-special").style.display = "inline-block";
-    logAction("🔍 Effet spécial : regardez une carte adverse.");
-    return true;
-  }
-  if (card === "V") {
-    specialAction = true;
-    pendingSpecial = "V";
-    document.getElementById("skip-special").style.display = "inline-block";
-    logAction("🔄 Effet spécial : échangez une carte avec l'adversaire.");
-    return true;
-  }
-  return false;
-}
-
-export {
-  selectCard,
-  drawCard,
-  initiateDiscardSwap,
-  skipSpecial,
-  declareCactus,
-  startNewRound,
-  resetGame,
-  manualDiscard,
-  discardDrawnCard,
-  logAction,
-  updateTurnInfo,
-  renderCards,
-  cardCount, targetScore, startVisibleCount, score1, score2, mancheCount
-};
+// Tu peux maintenant tout gérer dans ce fichier.
+// N’oublie pas de mettre à jour <script type="module" src="script.js"></script> dans ton index.html
