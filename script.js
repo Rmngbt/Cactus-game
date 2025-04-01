@@ -1,4 +1,4 @@
-// script.js (fusionné)
+// script.js (fusionné complet avec logique de jeu)
 console.log("✅ script.js bien chargé");
 
 // === Firebase Init ===
@@ -150,18 +150,11 @@ function startNewGame() {
   sessionStorage.setItem("targetScore", targetScore);
   sessionStorage.setItem("startVisibleCount", startVisibleCount);
 
-  // Logique de lancement de la partie
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   logAction("🎲 Nouvelle partie lancée !");
   logAction("🃏 Cartes par joueur : " + cardCount + ", Score cible : " + targetScore);
 
-  // ⚠️ Tu devras ajouter ensuite ici ta logique de jeu : distribution des cartes, tour 1, etc.
+  // À FAIRE : logiques supplémentaires comme la distribution et l'affichage initial des cartes
 }
 window.startNewGame = startNewGame;
-
-
-// 🎮 Ici tu peux ajouter le reste de ta logique de jeu classique à la suite (drawCard, discardDrawnCard, etc.)
-
-// Tu peux maintenant tout gérer dans ce fichier.
-// N’oublie pas de mettre à jour <script type="module" src="script.js"></script> dans ton index.html
