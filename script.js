@@ -246,14 +246,18 @@ function handleSpecialCard(card) {
   return false;
 }
 
-// Rendre accessibles depuis le HTML
-window.selectCard = selectCard;
-window.drawCard = drawCard;
-window.initiateDiscardSwap = initiateDiscardSwap;
-window.skipSpecial = skipSpecial;
-window.declareCactus = declareCactus;
-window.startNewRound = startNewRound;
-window.resetGame = resetGame;
-window.manualDiscard = manualDiscard;
-window.discardDrawnCard = discardDrawnCard;
-export { logAction, logDivider };
+export {
+  selectCard,
+  drawCard,
+  initiateDiscardSwap,
+  skipSpecial,
+  declareCactus,
+  startNewRound,
+  resetGame,
+  manualDiscard,
+  discardDrawnCard,
+  logAction,
+  updateTurnInfo,
+  renderCards,
+  cardCount, targetScore, startVisibleCount, score1, score2, mancheCount
+};
