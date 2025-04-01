@@ -1,6 +1,7 @@
 // main.js
 
 import { syncTurnToFirebase, listenToTurnChanges, listenToGameStateChange, triggerSetupState } from './firebase-sync.js';
+import { startNewRound } from './script.js';
 
 
 let cardCount = 4, targetScore = 3, startVisibleCount = 2;
@@ -139,3 +140,14 @@ function updateTurnInfo() {
 function renderCards() {
   // Tu peux ici appeler des fonctions depuis script.js si besoin
 }
+export {
+  startNewRound,
+  drawCard,
+  selectCard,
+  discardDrawnCard,
+  initiateDiscardSwap,
+  declareCactus,
+  skipSpecial,
+  resetGame,
+  manualDiscard
+};
