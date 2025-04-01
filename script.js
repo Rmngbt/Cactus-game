@@ -20,7 +20,13 @@ function updateScoreboard() {
 
 function logAction(msg) {
   const log = document.getElementById("log");
-  if (log) log.innerHTML += `<p>${msg}</p>`;
+  const timestamp = new Date().toLocaleTimeString();
+  if (log) log.innerHTML += `<p><strong>[${timestamp}]</strong> ${msg}</p>`;
+}
+
+function logDivider(title) {
+  const log = document.getElementById("log");
+  if (log) log.innerHTML += `<hr><h4>${title}</h4>`;
 }
 
 function updateTurnInfo() {
@@ -58,7 +64,7 @@ function selectCard(cardEl) {
     if (selectedForSwap !== null) return;
     selectedForSwap = true;
     cardEl.innerText = set[index];
-    logAction("👁 Carte révélée : " + set[index]);
+    logAction(`👁 [Joueur ${currentPlayer}] a révélé : ${set[index]}`);
     setTimeout(() => {
       cardEl.innerText = "?";
       selectedForSwap = null;
@@ -70,7 +76,7 @@ function selectCard(cardEl) {
     if (selectedForSwap !== null) return;
     selectedForSwap = true;
     cardEl.innerText = set[index];
-    logAction("🔍 Carte adverse : " + set[index]);
+    logAction(`🔍 [Joueur ${currentPlayer}] a vu une carte adverse : ${set[index]}`);
     setTimeout(() => {
       cardEl.innerText = "?";
       selectedForSwap = null;
@@ -104,7 +110,7 @@ function selectCard(cardEl) {
   document.getElementById("discard").innerText = replaced;
   drawnCard = null;
   document.getElementById("drawn-card").style.display = "none";
-  logAction("🔄 Carte échangée : " + replaced + " ↔ " + set[index]);
+  logAction(`🔄 [Joueur ${currentPlayer}] échange : ${replaced} ↔ ${set[index]}`);
   const isSpecial = handleSpecialCard(replaced);
   renderCards();
   if (!isSpecial) endTurn();
@@ -115,7 +121,7 @@ function drawCard() {
   drawnCard = drawRandomCard();
   document.getElementById("new-card").innerText = drawnCard;
   document.getElementById("drawn-card").style.display = "block";
-  logAction("🃏 Carte piochée : " + drawnCard);
+  logAction(`🃏 [Joueur ${currentPlayer}] pioche : ${drawnCard}`);
 }
 
 function initiateDiscardSwap() {
@@ -123,7 +129,7 @@ function initiateDiscardSwap() {
   drawnCard = discardPile.pop();
   document.getElementById("new-card").innerText = drawnCard;
   document.getElementById("drawn-card").style.display = "block";
-  logAction("🔁 Carte prise de la défausse : " + drawnCard);
+  logAction(`🔁 [Joueur ${currentPlayer}] prend dans la défausse : ${drawnCard}`);
 }
 
 function skipSpecial() {
@@ -139,20 +145,69 @@ function declareCactus() {
   if (cactusDeclared) return;
   cactusDeclared = true;
   cactusPlayer = currentPlayer;
-  logAction("🌵 Joueur " + currentPlayer + " dit Cactus !");
+  logDivider("🌵 Cactus annoncé !");
+  logAction(`🌵 Joueur ${currentPlayer} a déclaré Cactus !`);
   endTurn();
 }
 
 function startNewRound() {
-  logAction("🎮 Nouvelle manche démarrée.");
+  logDivider("🎮 Nouvelle manche");
+  logAction(`🔁 Manche ${mancheCount} commencée.`);
+  playerCards = Array.from({ length: cardCount }, drawRandomCard);
+  opponentCards = Array.from({ length: cardCount }, drawRandomCard);
+  discardPile = [];
+  drawnCard = null;
+  specialAction = false;
+  pendingSpecial = null;
+  selectedForSwap = null;
+  cactusDeclared = false;
+  cactusPlayer = null;
+  currentPlayer = 1;
+  renderCards();
+  updateTurnInfo();
+  document.getElementById("discard").innerText = "Vide";
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("skip-special").style.display = "none";
+  setTimeout(() => revealInitialCards(1), 300);
+}
+
+function revealInitialCards(player) {
+  const set = player === 1 ? playerCards : opponentCards;
+  const containerId = player === 1 ? "player-cards" : "opponent-cards";
+  const container = document.getElementById(containerId).children;
+  let toReveal = Math.min(startVisibleCount, set.length);
+  let revealed = 0;
+  logAction(`👆 Joueur ${player}, choisissez ${toReveal} carte(s) à regarder.`);
+  for (let i = 0; i < container.length; i++) {
+    const cardDiv = container[i].querySelector(".card");
+    cardDiv.classList.add("selectable-start");
+    cardDiv.addEventListener("click", function handleClick() {
+      if (revealed >= toReveal || parseInt(cardDiv.getAttribute("data-player")) !== player) return;
+      const index = parseInt(cardDiv.getAttribute("data-index"));
+      cardDiv.innerText = set[index];
+      revealed++;
+      if (revealed === toReveal) {
+        logAction(`👀 Joueur ${player} a regardé ses ${toReveal} cartes.`);
+        setTimeout(() => {
+          for (let j = 0; j < container.length; j++) {
+            const c = container[j].querySelector(".card");
+            c.classList.remove("selectable-start");
+            c.innerText = "?";
+          }
+          if (player === 1) setTimeout(() => revealInitialCards(2), 500);
+        }, 5000);
+      }
+    });
+  }
 }
 
 function resetGame() {
-  logAction("🔁 Jeu réinitialisé.");
+  logDivider("🔄 Réinitialisation");
+  logAction("🧼 Jeu réinitialisé.");
 }
 
 function manualDiscard(player, index) {
-  logAction("🗑 Défausse manuelle de la carte index " + index + " du joueur " + player);
+  logAction(`🗑 [Joueur ${player}] défausse la carte ${index}`);
 }
 
 function discardDrawnCard() {
@@ -190,64 +245,6 @@ function handleSpecialCard(card) {
   }
   return false;
 }
-function revealInitialCards(player) {
-  const set = player === 1 ? playerCards : opponentCards;
-  const containerId = player === 1 ? "player-cards" : "opponent-cards";
-  const container = document.getElementById(containerId).children;
-  let toReveal = Math.min(startVisibleCount, set.length);
-  let revealed = 0;
-
-  logAction(`👆 Joueur ${player}, choisissez ${toReveal} carte(s) à regarder.`);
-  for (let i = 0; i < container.length; i++) {
-    const cardDiv = container[i].querySelector(".card");
-    cardDiv.classList.add("selectable-start");
-
-    cardDiv.addEventListener("click", function handleClick() {
-      if (revealed >= toReveal || parseInt(cardDiv.getAttribute("data-player")) !== player) return;
-      const index = parseInt(cardDiv.getAttribute("data-index"));
-      cardDiv.innerText = set[index];
-      revealed++;
-
-      if (revealed === toReveal) {
-        logAction(`👀 Joueur ${player} a regardé ses ${toReveal} cartes.`);
-        setTimeout(() => {
-          for (let j = 0; j < container.length; j++) {
-            const c = container[j].querySelector(".card");
-            c.classList.remove("selectable-start");
-            c.innerText = "?";
-          }
-          if (player === 1) setTimeout(() => revealInitialCards(2), 500);
-        }, 5000);
-      }
-    });
-  }
-}
-
-function startNewRound() {
-  logDivider("🎮 Nouvelle manche");
-  logAction(`🔁 Manche ${mancheCount} commencée.`);
-
-  playerCards = Array.from({ length: cardCount }, drawRandomCard);
-  opponentCards = Array.from({ length: cardCount }, drawRandomCard);
-  discardPile = [];
-  drawnCard = null;
-  specialAction = false;
-  pendingSpecial = null;
-  selectedForSwap = null;
-  cactusDeclared = false;
-  cactusPlayer = null;
-  currentPlayer = 1;
-
-  renderCards();
-  updateTurnInfo();
-  document.getElementById("discard").innerText = "Vide";
-  document.getElementById("drawn-card").style.display = "none";
-  document.getElementById("skip-special").style.display = "none";
-
-  setTimeout(() => revealInitialCards(1), 300);
-}
-
-
 
 // Rendre accessibles depuis le HTML
 window.selectCard = selectCard;
