@@ -1,6 +1,6 @@
 // === Gestion des salons multijoueurs ===
 import { ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
-import { db } from "./FirebaseSync.js";
+import { db } from './firebase-init.js'; // ✅ Correct
 
 export function createRoom(username) {
   const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -65,3 +65,4 @@ export function launchSetup() {
   document.getElementById("setup").style.display = "block";
   logAction("🟢 Configuration de la partie prête.");
 }
+export { safeCreateRoom };

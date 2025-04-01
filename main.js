@@ -16,6 +16,7 @@ import {
 import { syncTurnToFirebase, listenToTurnChanges, listenToGameStateChange } from './firebase-sync.js';
 import { login } from './AuthAndLobby.js';
 import { setupRoomListeners } from './RoomManager.js';
+import { safeCreateRoom } from './RoomManager.js';
 
 window.startNewGame = () => {
   startNewRound(); // ou ta logique de nouvelle partie complète
