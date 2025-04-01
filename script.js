@@ -256,3 +256,4 @@ window.startNewRound = startNewRound;
 window.resetGame = resetGame;
 window.manualDiscard = manualDiscard;
 window.discardDrawnCard = discardDrawnCard;
+export { logAction, logDivider };

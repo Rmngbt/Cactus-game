@@ -1,12 +1,16 @@
 // === AuthAndLobby.js ===
 
+import { logAction } from "./logUtils.js";
+import { logAction } from './script.js';
+
+
 function login() {
   const username = document.getElementById("username").value.trim();
   if (!username) return alert("Entre un pseudo pour continuer.");
   sessionStorage.setItem("username", username);
   document.getElementById("welcome").style.display = "none";
   document.getElementById("config").style.display = "block";
-  logAction("👋 Bienvenue, " + username + " !");
+  
 }
 
 function createRoom() {
@@ -21,8 +25,7 @@ function createRoom() {
   document.getElementById("lobby").style.display = "block";
   document.getElementById("lobby-room").innerText = roomId;
   watchLobbyPlayers(roomId);
-  logAction("🔧 Partie créée. Code : " + roomId);
-  logAction("👤 Joueur ajouté : " + username);
+ 
 }
 
 function joinRoom() {
@@ -36,8 +39,7 @@ function joinRoom() {
   document.getElementById("lobby").style.display = "block";
   document.getElementById("lobby-room").innerText = roomId;
   watchLobbyPlayers(roomId);
-  logAction("🔗 Rejoint la partie : " + roomId);
-  logAction("👤 Joueur ajouté : " + username);
+
 }
 
 function watchLobbyPlayers(roomId) {
@@ -65,6 +67,6 @@ function launchSetup() {
   set(ref(db, `games/${roomId}/state`), "setup");
   document.getElementById("lobby").style.display = "none";
   document.getElementById("setup").style.display = "block";
-  logAction("🟢 Configuration de la partie prête.");
+  
 }
 window.login = login;
