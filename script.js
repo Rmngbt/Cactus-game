@@ -141,6 +141,10 @@ function listenToTurnChanges(callback) {
   });
 }
 
+// === Logique de Jeu ===
+let playerCards = [], opponentCards = [], discardPile = [];
+let currentPlayer = 1;
+
 function startNewGame() {
   const cardCount = parseInt(document.getElementById("card-count").value);
   const targetScore = parseInt(document.getElementById("target-score").value);
@@ -155,6 +159,25 @@ function startNewGame() {
   logAction("🎲 Nouvelle partie lancée !");
   logAction("🃏 Cartes par joueur : " + cardCount + ", Score cible : " + targetScore);
 
-  // À FAIRE : logiques supplémentaires comme la distribution et l'affichage initial des cartes
+  // Exemple : remplir les mains de cartes
+  const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+  playerCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
+  opponentCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
+
+  renderCards();
+  updateTurnInfo();
 }
 window.startNewGame = startNewGame;
+
+function updateTurnInfo() {
+  const info = document.getElementById("turn-info");
+  if (info) info.innerText = "Tour du joueur " + currentPlayer;
+}
+
+function renderCards() {
+  const container1 = document.getElementById("player-cards");
+  const container2 = document.getElementById("opponent-cards");
+  if (!container1 || !container2) return;
+  container1.innerHTML = playerCards.map((c, i) => `<div class="card" data-index="${i}" data-player="1">?</div>`).join("");
+  container2.innerHTML = opponentCards.map((c, i) => `<div class="card" data-index="${i}" data-player="2">?</div>`).join("");
+}
