@@ -127,6 +127,17 @@ function discardDrawnCard() {
   if (!isSpecial) endTurn();
 }
 
+// Rendre accessibles depuis le HTML
+window.selectCard = selectCard;
+window.drawCard = drawCard;
+window.initiateDiscardSwap = initiateDiscardSwap;
+window.skipSpecial = skipSpecial;
+window.declareCactus = declareCactus;
+window.startNewRound = startNewRound;
+window.resetGame = resetGame;
+window.manualDiscard = manualDiscard;
+window.discardDrawnCard = discardDrawnCard;
+
 function initiateDiscardSwap() {
   if (discardPile.length === 0 || drawnCard !== null) return;
   drawnCard = discardPile.pop();
