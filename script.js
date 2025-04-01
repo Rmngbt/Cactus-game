@@ -141,6 +141,26 @@ function listenToTurnChanges(callback) {
   });
 }
 
+function startNewGame() {
+  const cardCount = parseInt(document.getElementById("card-count").value);
+  const targetScore = parseInt(document.getElementById("target-score").value);
+  const startVisibleCount = parseInt(document.getElementById("visible-count").value);
+
+  sessionStorage.setItem("cardCount", cardCount);
+  sessionStorage.setItem("targetScore", targetScore);
+  sessionStorage.setItem("startVisibleCount", startVisibleCount);
+
+  // Logique de lancement de la partie
+  document.getElementById("setup").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  logAction("🎲 Nouvelle partie lancée !");
+  logAction("🃏 Cartes par joueur : " + cardCount + ", Score cible : " + targetScore);
+
+  // ⚠️ Tu devras ajouter ensuite ici ta logique de jeu : distribution des cartes, tour 1, etc.
+}
+window.startNewGame = startNewGame;
+
+
 // 🎮 Ici tu peux ajouter le reste de ta logique de jeu classique à la suite (drawCard, discardDrawnCard, etc.)
 
 // Tu peux maintenant tout gérer dans ce fichier.
