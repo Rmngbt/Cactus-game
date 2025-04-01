@@ -1,16 +1,17 @@
 // === AuthAndLobby.js ===
+import { auth } from './firebase-init.js';
 
 import { logAction } from './script.js';
 
 
-function login() {
-  const username = document.getElementById("username").value.trim();
+export function login() {
+  const usernameInput = document.getElementById("username");
+  const username = usernameInput.value.trim();
   if (!username) return alert("Entre un pseudo pour continuer.");
   sessionStorage.setItem("username", username);
   document.getElementById("welcome").style.display = "none";
   document.getElementById("config").style.display = "block";
-    logAction(`👋 Bienvenue, ${username} !`);
-
+  logAction("👋 Bienvenue, " + username + " !");
 }
 
 function createRoom() {

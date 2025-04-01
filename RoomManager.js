@@ -72,7 +72,7 @@ export function launchSetup() {
 }
 
 // Ajoute une fonction sûre pour la création de partie
-export function safeCreateRoom() {
+function safeCreateRoom() {
   const username = sessionStorage.getItem("username");
   if (!username) {
     alert("Pseudo manquant. Veuillez vous reconnecter.");
@@ -80,3 +80,5 @@ export function safeCreateRoom() {
   }
   createRoom(username);
 }
+
+export { safeCreateRoom };
