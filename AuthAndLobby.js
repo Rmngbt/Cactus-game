@@ -67,3 +67,4 @@ function launchSetup() {
   document.getElementById("setup").style.display = "block";
   logAction("🟢 Configuration de la partie prête.");
 }
+window.login = login;
