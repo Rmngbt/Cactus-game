@@ -1,6 +1,7 @@
 // firebase-init.js
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -17,4 +18,12 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-export { app, db, auth, ref, set, onValue };
+export {
+  app,
+  db,
+  auth,
+  ref,
+  set,
+  onValue,
+  get
+};
