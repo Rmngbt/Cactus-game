@@ -144,6 +144,7 @@ window.saveGameConfig = saveGameConfig;
 let playerCards = [], opponentCards = [], discardPile = [], drawnCard = null;
 let currentPlayer = 1, specialAction = false, pendingSpecial = null, selectedForSwap = null;
 let cactusDeclared = false, cactusPlayer = null;
+let startVisibleCount = 2;
 
 function startGameForAll() {
   const roomId = sessionStorage.getItem("roomId");
@@ -158,6 +159,7 @@ function startGameForAll() {
     renderCards();
     updateTurnInfo();
     renderScoreboard();
+	 revealInitialCards();
   });
 }
 
@@ -284,3 +286,28 @@ function initiateDiscardSwap() {
   logAction("🔁 Carte prise de la défausse : " + top);
 }
 window.initiateDiscardSwap = initiateDiscardSwap;
+
+
+function revealInitialCards() {
+  const username = sessionStorage.getItem("username");
+  const handDiv = document.querySelector(`#all-players .player-hand`);
+  if (!handDiv) return;
+  let revealed = 0;
+  const cards = handDiv.querySelectorAll(".card");
+  cards.forEach(cardEl => {
+    cardEl.classList.add("selectable-start");
+    cardEl.onclick = () => {
+      if (revealed >= startVisibleCount) return;
+      const index = parseInt(cardEl.dataset.index);
+      cardEl.innerText = playerCards[index];
+      revealed++;
+      if (revealed === startVisibleCount) {
+        logAction(`👀 ${username}, cartes initiales vues.`);
+        setTimeout(() => {
+          cards.forEach((c, i) => c.innerText = "?");
+          renderCards();
+        }, 4000);
+      }
+    };
+  });
+}
