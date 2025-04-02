@@ -15,16 +15,16 @@
 
   <div id="config" style="display:none;">
     <h2>Créer ou rejoindre une partie</h2>
-    <button onclick="safeCreateRoom()">Créer une partie</button>
+    <button id="btn-create-room">Créer une partie</button>
     <input type="text" id="room-code" placeholder="Code de partie">
-    <button onclick="joinRoom()">Rejoindre une partie</button>
+    <button id="btn-join-room">Rejoindre une partie</button>
   </div>
 
   <div id="lobby" style="display:none;">
     <h2>Salle d’attente</h2>
     <p>Code de la partie : <strong id="lobby-room"></strong></p>
     <div id="lobby-players">En attente de joueurs...</div>
-    <button onclick="launchSetup()" id="start-game" style="display:none;">Configurer la partie</button>
+    <button id="btn-launch-setup" style="display:none;">Configurer la partie</button>
   </div>
 
   <div id="setup" style="display:none;">
@@ -32,8 +32,8 @@
     <label>Cartes par joueur : <input type="number" id="card-count" value="4" min="3" max="8"></label><br>
     <label>Cartes visibles au début : <input type="number" id="visible-count" value="2" min="0" max="8"></label><br>
     <label>Score cible : <input type="number" id="target-score" value="3" min="1" max="10"></label><br>
-    <button onclick="saveGameConfig()">Enregistrer config</button>
-    <button onclick="startNewGame()">Lancer la partie</button>
+    <button id="btn-save-config">Enregistrer config</button>
+    <button id="btn-start-game">Lancer la partie</button>
   </div>
 
   <div id="game" style="display:none;">
@@ -45,10 +45,10 @@
 
     <div id="all-players"></div>
 
-    <button onclick="drawCard()">Piocher une carte</button>
-    <button onclick="initiateDiscardSwap()">Prendre de la défausse</button>
-    <button id="skip-special" style="display:none;" onclick="skipSpecial()">Passer l'action spéciale</button>
-    <button onclick="declareCactus()">Cactus</button>
+    <button id="btn-draw-card">Piocher une carte</button>
+    <button id="btn-discard-swap">Prendre de la défausse</button>
+    <button id="skip-special" style="display:none;">Passer l'action spéciale</button>
+    <button id="btn-declare-cactus">Cactus</button>
 
     <div id="discard-pile">Défausse: <span id="discard">Vide</span></div>
     <p id="turn-info">Tour du joueur</p>
