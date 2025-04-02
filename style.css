@@ -64,17 +64,19 @@ button {
 
 #all-players {
   display: flex;
-  justify-content: space-around;
-  align-items: flex-start;
-  flex-wrap: wrap;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   margin-top: 20px;
 }
 
 .player-hand {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  margin: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 10px 0;
 }
 
 .player-hand h3 {
