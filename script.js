@@ -34,6 +34,37 @@ function login() {
   log(`👋 Bienvenue, ${username} !`);
 }
 
+// Fonctions liées à la création de partie (mock temporaire pour tests)
+function safeCreateRoom() {
+  log("🧪 Création fictive d'une partie...");
+  document.getElementById("config").style.display = "none";
+  document.getElementById("lobby").style.display = "block";
+  document.getElementById("lobby-room").innerText = "TEST123";
+}
+
+function joinRoom() {
+  log("🧪 Rejoint fictivement une partie...");
+  document.getElementById("config").style.display = "none";
+  document.getElementById("lobby").style.display = "block";
+  document.getElementById("lobby-room").innerText = "TEST123";
+}
+
+function launchSetup() {
+  document.getElementById("lobby").style.display = "none";
+  document.getElementById("setup").style.display = "block";
+}
+
+function saveGameConfig() {
+  log("💾 Config sauvegardée (mock).");
+}
+
+function startNewGame() {
+  document.getElementById("setup").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  playerCards = Array.from({ length: 4 }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
+  renderCards();
+}
+
 function setupListeners() {
   document.getElementById("btn-login")?.addEventListener("click", login);
   document.getElementById("btn-create-room")?.addEventListener("click", safeCreateRoom);
@@ -49,9 +80,6 @@ function setupListeners() {
 
 window.addEventListener("DOMContentLoaded", () => {
   setupListeners();
-  // Mode démo local (à retirer quand Firebase OK)
   playerCards = Array.from({ length: 4 }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
   renderCards();
 });
-
-// Tu peux maintenant appeler login(), elle est bien définie plus haut ✅
