@@ -39,9 +39,21 @@
   </div>
 
   <div id="game" style="display: none;">
-    <h2>Zone de jeu</h2>
+    <div id="scoreboard" style="position: fixed; top: 10px; right: 10px; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.2);">
+      <h4>Score</h4>
+      <p><span id="player1-name">Joueur 1</span> : <span id="score-j1">0</span></p>
+      <p><span id="player2-name">Joueur 2</span> : <span id="score-j2">0</span></p>
+      <p>Manche : <span id="manche-count">1</span></p>
+    </div>
+
+    <h2 id="current-player-name"></h2>
+
+    <h3><span id="player1-name-top">Joueur 1</span></h3>
     <div id="player-cards"></div>
+
+    <h3><span id="player2-name-top">Joueur 2</span></h3>
     <div id="opponent-cards"></div>
+
     <p id="turn-info"></p>
     <div id="log"></div>
   </div>
