@@ -61,7 +61,7 @@ function launchSetup() {
 }
 
 function saveGameConfig() {
-  log("💾 Config sauvegardée (mock).”);
+  log("💾 Config sauvegardée (mock).");
 }
 
 function startNewGame() {
