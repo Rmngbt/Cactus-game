@@ -1,3 +1,4 @@
+
 // script.js (fusionné complet avec logique de jeu + contrôle host + synchro)
 console.log("✅ script.js bien chargé");
 
@@ -90,10 +91,23 @@ function watchLobbyPlayers(roomId) {
   const stateRef = ref(db, `games/${roomId}/state`);
   onValue(stateRef, (snap) => {
     const state = snap.val();
+    const isHost = sessionStorage.getItem("isHost") === "true";
+
     if (state === "setup") {
       document.getElementById("lobby").style.display = "none";
-      document.getElementById("setup").style.display = "block";
-      logAction("🟢 Le créateur a lancé la configuration de la partie.");
+      if (isHost) {
+        document.getElementById("setup").style.display = "block";
+        logAction("🟢 Vous configurez la partie.");
+      } else {
+        document.getElementById("setup").innerHTML = "<p>⏳ L’hôte configure la partie…</p>";
+        document.getElementById("setup").style.display = "block";
+      }
+    }
+
+    if (state === "started") {
+      document.getElementById("setup").style.display = "none";
+      document.getElementById("game").style.display = "block";
+      startGameForAll();
     }
   });
 }
@@ -106,6 +120,16 @@ function launchSetup() {
   set(ref(db, `games/${roomId}/state`), "setup");
 }
 window.launchSetup = launchSetup;
+
+function startGameForAll() {
+  const cardCount = parseInt(sessionStorage.getItem("cardCount")) || 4;
+  const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+  playerCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
+  opponentCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
+  document.getElementById("game").style.display = "block";
+  renderCards();
+  updateTurnInfo();
+}
 
 let playerCards = [], opponentCards = [], discardPile = [];
 let currentPlayer = 1;
@@ -122,18 +146,8 @@ function startNewGame() {
   sessionStorage.setItem("targetScore", targetScore);
   sessionStorage.setItem("startVisibleCount", startVisibleCount);
 
-  document.getElementById("setup").style.display = "none";
-  document.getElementById("game").style.display = "block";
-  logAction("🎲 Nouvelle partie lancée !");
-  logAction("🃏 Cartes par joueur : " + cardCount + ", Score cible : " + targetScore);
-
-  const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
-  playerCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
-  opponentCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
-
-  renderCards();
-  updateTurnInfo();
-  syncTurnToFirebase(1);
+  const roomId = sessionStorage.getItem("roomId");
+  set(ref(db, `games/${roomId}/state`), "started");
 }
 window.startNewGame = startNewGame;
 
@@ -158,6 +172,23 @@ function renderCards() {
       <button class="discard-btn" onclick="manualDiscard(2, ${i})">🗑</button>
       <div class="card" data-index="${i}" data-player="2" onclick="selectCard(this)">?</div>
     </div>`).join("");
+}
+
+function syncTurnToFirebase(turn) {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+  set(ref(db, `games/${roomId}/currentPlayer`), turn);
+}
+
+function listenToTurnChanges(callback) {
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+  const turnRef = ref(db, `games/${roomId}/currentPlayer`);
+
+  onValue(turnRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val !== null) callback(val);
+  });
 }
 
 listenToTurnChanges((val) => {
