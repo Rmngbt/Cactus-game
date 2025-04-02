@@ -141,5 +141,39 @@ function saveGameConfig() {
 }
 window.saveGameConfig = saveGameConfig;
 
-// Prochain bloc à venir : intégration complète des mécaniques de jeu (cartes, pioche, actions)
-// Inclura : drawCard, renderCards, discardDrawnCard, handleSpecialCard, skipSpecial, selectCard, etc.
+// === MÉCANIQUES DE JEU SIMPLIFIÉES POUR TEST ===
+let playerCards = [];
+
+function drawCard() {
+  const card = Math.floor(Math.random() * 10) + 1;
+  playerCards.push(card);
+  renderCards();
+  logAction("🃏 Carte piochée : " + card);
+}
+window.drawCard = drawCard;
+
+function renderCards() {
+  const container = document.getElementById("player-cards");
+  container.innerHTML = "";
+  playerCards.forEach((val, index) => {
+    const card = document.createElement("div");
+    card.className = "card highlight";
+    card.innerText = val;
+    card.onclick = () => selectCard(index);
+    container.appendChild(card);
+  });
+}
+
+function selectCard(index) {
+  logAction("🟩 Carte sélectionnée: " + playerCards[index]);
+}
+window.selectCard = selectCard;
+
+function startGameForAll() {
+  logAction("🎮 Début de la partie");
+  document.getElementById("game").style.display = "block";
+  playerCards = [];
+  drawCard();
+  drawCard();
+  renderCards();
+}
