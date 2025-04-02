@@ -141,4 +141,5 @@ function saveGameConfig() {
 }
 window.saveGameConfig = saveGameConfig;
 
-// TODO: Intégration de drawCard, discard, highlight, révélation initiale (prochain bloc)
+// Prochain bloc à venir : intégration complète des mécaniques de jeu (cartes, pioche, actions)
+// Inclura : drawCard, renderCards, discardDrawnCard, handleSpecialCard, skipSpecial, selectCard, etc.
