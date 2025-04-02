@@ -121,30 +121,38 @@ function launchSetup() {
 window.launchSetup = launchSetup;
 
 function startGameForAll() {
-  const cardCount = parseInt(sessionStorage.getItem("cardCount")) || 4;
-  const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
-  playerCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
-  opponentCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
-  document.getElementById("game").style.display = "block";
-  renderCards();
-  updateTurnInfo();
+  const roomId = sessionStorage.getItem("roomId");
+  const configRef = ref(db, `games/${roomId}/config`);
+  onValue(configRef, (snap) => {
+    const config = snap.val();
+    const cardCount = config?.cardCount || 4;
+    const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+    playerCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
+    opponentCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
+    document.getElementById("game").style.display = "block";
+    renderCards();
+    updateTurnInfo();
+  });
 }
 
 let playerCards = [], opponentCards = [], discardPile = [];
 let currentPlayer = 1;
 
+function saveGameConfig() {
+  const roomId = sessionStorage.getItem("roomId");
+  const configData = {
+    cardCount: parseInt(document.getElementById("card-count").value),
+    targetScore: parseInt(document.getElementById("target-score").value),
+    startVisibleCount: parseInt(document.getElementById("visible-count").value)
+  };
+  set(ref(db, `games/${roomId}/config`), configData);
+  logAction("💾 Configuration enregistrée !");
+}
+window.saveGameConfig = saveGameConfig;
+
 function startNewGame() {
   const isHost = sessionStorage.getItem("isHost") === "true";
   if (!isHost) return alert("Seul l'hôte peut démarrer la partie.");
-
-  const cardCount = parseInt(document.getElementById("card-count").value);
-  const targetScore = parseInt(document.getElementById("target-score").value);
-  const startVisibleCount = parseInt(document.getElementById("visible-count").value);
-
-  sessionStorage.setItem("cardCount", cardCount);
-  sessionStorage.setItem("targetScore", targetScore);
-  sessionStorage.setItem("startVisibleCount", startVisibleCount);
-
   const roomId = sessionStorage.getItem("roomId");
   set(ref(db, `games/${roomId}/state`), "started");
 }
@@ -183,7 +191,6 @@ function listenToTurnChanges(callback) {
   const roomId = sessionStorage.getItem("roomId");
   if (!roomId) return;
   const turnRef = ref(db, `games/${roomId}/currentPlayer`);
-
   onValue(turnRef, (snapshot) => {
     const val = snapshot.val();
     if (val !== null) callback(val);
