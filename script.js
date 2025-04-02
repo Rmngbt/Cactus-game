@@ -1,4 +1,4 @@
-// script.js (fusionné complet avec logique de jeu)
+// script.js (fusionné complet avec logique de jeu + contrôle host + synchro)
 console.log("✅ script.js bien chargé");
 
 // === Firebase Init ===
@@ -20,14 +20,12 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-// === Utilitaires ===
 function logAction(msg) {
   const log = document.getElementById("log");
   if (log) log.innerHTML += `<p>${msg}</p>`;
   console.log(msg);
 }
 
-// === Auth et connexion ===
 function login() {
   const usernameInput = document.getElementById("username");
   const username = usernameInput.value.trim();
@@ -39,7 +37,6 @@ function login() {
 }
 window.login = login;
 
-// === Gestion de salle ===
 function safeCreateRoom() {
   const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
   const username = sessionStorage.getItem("username");
@@ -88,69 +85,35 @@ function watchLobbyPlayers(roomId) {
     if (!players) return;
     const list = Object.keys(players).map(name => `<li>${name}</li>`).join("");
     lobbyDiv.innerHTML = `<ul>${list}</ul>`;
-    if (Object.keys(players).length >= 2) startBtn.style.display = "inline-block";
+  });
+
+  const stateRef = ref(db, `games/${roomId}/state`);
+  onValue(stateRef, (snap) => {
+    const state = snap.val();
+    if (state === "setup") {
+      document.getElementById("lobby").style.display = "none";
+      document.getElementById("setup").style.display = "block";
+      logAction("🟢 Le créateur a lancé la configuration de la partie.");
+    }
   });
 }
 
 function launchSetup() {
-  const isHost = sessionStorage.getItem("isHost");
-  if (isHost !== "true") {
-    alert("Seul le créateur de la partie peut lancer le jeu.");
-    return;
-  }
+  const isHost = sessionStorage.getItem("isHost") === "true";
   const roomId = sessionStorage.getItem("roomId");
+  if (!isHost) return alert("Seul l'hôte peut lancer la partie.");
   if (!roomId) return;
   set(ref(db, `games/${roomId}/state`), "setup");
-  document.getElementById("lobby").style.display = "none";
-  document.getElementById("setup").style.display = "block";
-  logAction("🟢 Configuration de la partie prête.");
 }
 window.launchSetup = launchSetup;
 
-function triggerSetupState() {
-  const roomId = sessionStorage.getItem("roomId");
-  if (!roomId) return;
-  set(ref(db, `games/${roomId}/state`), "setup");
-  document.getElementById("lobby").style.display = "none";
-  document.getElementById("setup").style.display = "block";
-  logAction("🟢 Configuration de la partie prête.");
-}
-window.triggerSetupState = triggerSetupState;
-
-// === Synchronisation ===
-function syncTurnToFirebase(turn) {
-  const roomId = sessionStorage.getItem("roomId");
-  if (!roomId) return;
-  set(ref(db, `games/${roomId}/currentPlayer`), turn);
-}
-
-function listenToGameStateChange(setupCallback) {
-  const roomId = sessionStorage.getItem("roomId");
-  if (!roomId) return;
-  const stateRef = ref(db, `games/${roomId}/state`);
-
-  onValue(stateRef, (snap) => {
-    const state = snap.val();
-    if (state === "setup") setupCallback();
-  });
-}
-
-function listenToTurnChanges(callback) {
-  const roomId = sessionStorage.getItem("roomId");
-  if (!roomId) return;
-  const turnRef = ref(db, `games/${roomId}/currentPlayer`);
-
-  onValue(turnRef, (snapshot) => {
-    const val = snapshot.val();
-    if (val !== null) callback(val);
-  });
-}
-
-// === Logique de Jeu ===
 let playerCards = [], opponentCards = [], discardPile = [];
 let currentPlayer = 1;
 
 function startNewGame() {
+  const isHost = sessionStorage.getItem("isHost") === "true";
+  if (!isHost) return alert("Seul l'hôte peut démarrer la partie.");
+
   const cardCount = parseInt(document.getElementById("card-count").value);
   const targetScore = parseInt(document.getElementById("target-score").value);
   const startVisibleCount = parseInt(document.getElementById("visible-count").value);
@@ -170,6 +133,7 @@ function startNewGame() {
 
   renderCards();
   updateTurnInfo();
+  syncTurnToFirebase(1);
 }
 window.startNewGame = startNewGame;
 
@@ -196,11 +160,8 @@ function renderCards() {
     </div>`).join("");
 }
 
-// Activation écoute synchronisation setup depuis Firebase
-document.addEventListener("DOMContentLoaded", () => {
-  listenToGameStateChange(() => {
-    document.getElementById("lobby").style.display = "none";
-    document.getElementById("setup").style.display = "block";
-    logAction("⚙️ Un autre joueur a lancé la configuration.");
-  });
+listenToTurnChanges((val) => {
+  currentPlayer = val;
+  updateTurnInfo();
+  renderCards();
 });
