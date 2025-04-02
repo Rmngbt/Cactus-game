@@ -3,7 +3,7 @@ console.log("✅ script.js bien chargé");
 
 // === Firebase Init ===
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -125,7 +125,27 @@ function startNewGame() {
   const isHost = sessionStorage.getItem("isHost") === "true";
   if (!isHost) return alert("Seul l'hôte peut démarrer la partie.");
   const roomId = sessionStorage.getItem("roomId");
+  
+  const cardCount = parseInt(document.getElementById("card-count").value);
+const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+
+const playersRef = ref(db, `games/${roomId}/players`);
+onValue(playersRef, (snap) => {
+  const players = Object.keys(snap.val());
+  players.forEach((player) => {
+    const hand = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
+    set(ref(db, `games/${roomId}/hands/${player}`), hand);
+  });
+
   set(ref(db, `games/${roomId}/state`), "started");
+
+  // Arrête d'écouter après la génération
+  off(playersRef);
+});
+  
+  
+  
+  
 const playersRef = ref(db, `games/${roomId}/players`);
 onValue(playersRef, (snap) => {
   const players = Object.keys(snap.val());
@@ -211,25 +231,51 @@ function renderScoreboard() {
 }
 
 function renderCards() {
-  const username = sessionStorage.getItem("username");
-  const container = document.getElementById("all-players");
-  container.innerHTML = "";
+  const currentUser = sessionStorage.getItem("username");
+  const isHost = sessionStorage.getItem("isHost") === "true";
 
-  const current = playerCards;
+  const allPlayersContainer = document.getElementById("all-players");
+  allPlayersContainer.innerHTML = "";
 
-  current.forEach((card, index) => {
-    const cardEl = document.createElement("div");
-    cardEl.className = "card";
-    cardEl.dataset.index = index;
-    cardEl.innerText = "?";
-    cardEl.onclick = () => {
-      cardEl.classList.toggle("highlight");
-    };
-    container.appendChild(cardEl);
-  });
+  const renderSet = (cards, ownerName, isCurrentUser) => {
+    const div = document.createElement("div");
+    div.className = "player-hand";
+    const title = document.createElement("h3");
+    title.innerText = isCurrentUser ? `${ownerName} (Moi)` : ownerName;
+    div.appendChild(title);
+
+    cards.forEach((card, i) => {
+      const cardWrapper = document.createElement("div");
+      cardWrapper.classList.add("card-wrapper");
+
+      const cardDiv = document.createElement("div");
+      cardDiv.classList.add("card");
+      cardDiv.dataset.index = i;
+      cardDiv.innerText = isCurrentUser ? "?" : "?";
+
+      if (isCurrentUser) {
+        cardDiv.onclick = () => selectCard(cardDiv);
+        const discardBtn = document.createElement("button");
+        discardBtn.innerText = "🗑";
+        discardBtn.classList.add("discard-btn");
+        discardBtn.onclick = (e) => {
+          e.stopPropagation();
+          manualDiscard(currentPlayer, i);
+        };
+        cardWrapper.appendChild(discardBtn);
+      }
+
+      cardWrapper.appendChild(cardDiv);
+      div.appendChild(cardWrapper);
+    });
+
+    allPlayersContainer.appendChild(div);
+  };
+
+  // Rendu de chaque main
+  renderSet(playerCards, currentUser, true);
+  renderSet(opponentCards, "Adversaire", false);
 }
-
-
 
 
 function selectCard(el) {
@@ -271,6 +317,7 @@ function manualDiscard(player, index) {
     set[index] = drawRandomCard();
     logAction("❌ Mauvaise défausse. Pénalité !");
   }
+  if (player !== currentPlayer) return logAction("❌ Ce n’est pas votre tour !");
   renderCards();
 }
 window.manualDiscard = manualDiscard;
