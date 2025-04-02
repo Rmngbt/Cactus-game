@@ -1,4 +1,4 @@
-// ✅ script.js corrigé : interactions visibles + joueurs + affichage tour
+// ✅ script.js avec gestion des cartes visibles, interactions et défausse
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
 
@@ -39,12 +39,7 @@ function safeCreateRoom() {
   document.getElementById("config").style.display = "none";
   document.getElementById("lobby").style.display = "block";
   document.getElementById("lobby-room").innerText = "TEST123";
-
-  document.getElementById("lobby-players").innerHTML = `
-    <li>Toi (hôte)</li>
-    <li>Bot</li>
-  `;
-
+  document.getElementById("lobby-players").innerHTML = `<li>Toi (hôte)</li><li>Bot</li>`;
   document.getElementById("btn-launch-setup").style.display = "inline-block";
 }
 
@@ -61,14 +56,16 @@ function launchSetup() {
 }
 
 function saveGameConfig() {
-  log("💾 Config sauvegardée (mock).");
+  startVisibleCount = parseInt(document.getElementById("visible-count").value);
+  cardCount = parseInt(document.getElementById("card-count").value);
+  log("💾 Config sauvegardée.");
 }
 
 function startNewGame() {
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-  playerCards = Array.from({ length: 4 }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
-  botCards = Array.from({ length: 4 }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
+  playerCards = Array.from({ length: cardCount }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
+  botCards = Array.from({ length: cardCount }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
   renderCards();
   updateTurn();
 }
@@ -77,6 +74,50 @@ function drawCard() {
   if (currentPlayer !== "Toi") return log("⛔ Ce n'est pas ton tour !");
   drawnCard = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
   log(`🃏 Carte piochée : ${drawnCard}`);
+  showDrawnCard();
+}
+
+function showDrawnCard() {
+  const drawnDiv = document.getElementById("drawn-card");
+  drawnDiv.style.display = "block";
+  document.getElementById("new-card").innerText = drawnCard;
+  if (!document.getElementById("discard-drawn")) {
+    const btn = document.createElement("button");
+    btn.id = "discard-drawn";
+    btn.innerText = "Défausser la carte";
+    btn.onclick = discardDrawnCard;
+    drawnDiv.after(btn);
+  }
+}
+
+function discardDrawnCard() {
+  if (!drawnCard) return;
+  discardPile.push(drawnCard);
+  log(`🗑 Carte défaussée : ${drawnCard}`);
+  drawnCard = null;
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("discard-drawn")?.remove();
+  renderCards();
+}
+
+function attemptCardSwap(index) {
+  if (drawnCard === null) return;
+  const old = playerCards[index];
+  playerCards[index] = drawnCard;
+  discardPile.push(old);
+  log(`🔄 Carte échangée : ${old} → ${drawnCard}`);
+  drawnCard = null;
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("discard-drawn")?.remove();
+  renderCards();
+}
+
+function discardCardFromHand(index) {
+  const card = playerCards[index];
+  discardPile.push(card);
+  playerCards[index] = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
+  log(`🗑 Défausse volontaire de la carte ${card}`);
+  renderCards();
 }
 
 function initiateDiscardSwap() {
@@ -84,14 +125,7 @@ function initiateDiscardSwap() {
   if (discardPile.length === 0) return log("❌ Aucune carte dans la défausse");
   drawnCard = discardPile.pop();
   log(`🔁 Carte récupérée de la défausse : ${drawnCard}`);
-}
-
-function declareCactus() {
-  log("🌵 Cactus annoncé !");
-}
-
-function skipSpecial() {
-  log("⏭ Action spéciale ignorée.");
+  showDrawnCard();
 }
 
 function renderCards() {
@@ -103,21 +137,34 @@ function renderCards() {
   div1.className = "player-hand";
   div1.innerHTML = "<h3>Toi</h3>";
   playerCards.forEach((card, i) => {
-    const cardDiv = document.createElement("div");
-    cardDiv.className = "card";
-    cardDiv.innerText = card;
-    div1.appendChild(cardDiv);
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrapper";
+
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerText = i < startVisibleCount ? card : "?";
+    if (drawnCard !== null && i < startVisibleCount) {
+      c.onclick = () => attemptCardSwap(i);
+    }
+
+    const trash = document.createElement("button");
+    trash.innerText = "🗑";
+    trash.className = "discard-btn";
+    trash.onclick = () => discardCardFromHand(i);
+
+    wrap.appendChild(trash);
+    wrap.appendChild(c);
+    div1.appendChild(wrap);
   });
 
-  // Bot
   const div2 = document.createElement("div");
   div2.className = "player-hand";
   div2.innerHTML = "<h3>Bot</h3>";
   botCards.forEach(() => {
-    const cardDiv = document.createElement("div");
-    cardDiv.className = "card";
-    cardDiv.innerText = "?";
-    div2.appendChild(cardDiv);
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerText = "?";
+    div2.appendChild(c);
   });
 
   container.appendChild(div1);
@@ -137,8 +184,8 @@ function setupListeners() {
   document.getElementById("btn-start-game")?.addEventListener("click", startNewGame);
   document.getElementById("btn-draw-card")?.addEventListener("click", drawCard);
   document.getElementById("btn-discard-swap")?.addEventListener("click", initiateDiscardSwap);
-  document.getElementById("btn-declare-cactus")?.addEventListener("click", declareCactus);
-  document.getElementById("skip-special")?.addEventListener("click", skipSpecial);
+  document.getElementById("btn-declare-cactus")?.addEventListener("click", () => log("🌵 Cactus !"));
+  document.getElementById("skip-special")?.addEventListener("click", () => log("⏭ Spéciale ignorée"));
 }
 
 window.addEventListener("DOMContentLoaded", () => {
