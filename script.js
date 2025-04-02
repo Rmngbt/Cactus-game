@@ -93,6 +93,11 @@ function watchLobbyPlayers(roomId) {
 }
 
 function launchSetup() {
+  const isHost = sessionStorage.getItem("isHost");
+  if (isHost !== "true") {
+    alert("Seul le créateur de la partie peut lancer le jeu.");
+    return;
+  }
   const roomId = sessionStorage.getItem("roomId");
   if (!roomId) return;
   set(ref(db, `games/${roomId}/state`), "setup");
@@ -159,7 +164,6 @@ function startNewGame() {
   logAction("🎲 Nouvelle partie lancée !");
   logAction("🃏 Cartes par joueur : " + cardCount + ", Score cible : " + targetScore);
 
-  // Exemple : remplir les mains de cartes
   const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
   playerCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
   opponentCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
@@ -168,20 +172,6 @@ function startNewGame() {
   updateTurnInfo();
 }
 window.startNewGame = startNewGame;
-
-listenToGameStateChange(() => {
-  document.getElementById("lobby").style.display = "none";
-  document.getElementById("setup").style.display = "block";
-  logAction("⚙️ Un autre joueur a lancé la configuration.");
-});
-
-listenToTurnChanges((newTurn) => {
-  currentPlayer = newTurn;
-  updateTurnInfo();
-  renderCards();
-  logAction("🔄 Tour synchronisé : joueur " + currentPlayer);
-});
-
 
 function updateTurnInfo() {
   const info = document.getElementById("turn-info");
@@ -205,3 +195,12 @@ function renderCards() {
       <div class="card" data-index="${i}" data-player="2" onclick="selectCard(this)">?</div>
     </div>`).join("");
 }
+
+// Activation écoute synchronisation setup depuis Firebase
+document.addEventListener("DOMContentLoaded", () => {
+  listenToGameStateChange(() => {
+    document.getElementById("lobby").style.display = "none";
+    document.getElementById("setup").style.display = "block";
+    logAction("⚙️ Un autre joueur a lancé la configuration.");
+  });
+});
