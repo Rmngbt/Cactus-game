@@ -24,6 +24,16 @@ const log = (msg) => {
   console.log(msg);
 };
 
+function login() {
+  const username = document.getElementById("username").value.trim();
+  if (!username) return alert("Entre un pseudo pour continuer.");
+  sessionStorage.setItem("username", username);
+  document.getElementById("welcome").style.display = "none";
+  document.getElementById("config").style.display = "block";
+  document.getElementById("player-name").innerText = username;
+  log(`👋 Bienvenue, ${username} !`);
+}
+
 function setupListeners() {
   document.getElementById("btn-login")?.addEventListener("click", login);
   document.getElementById("btn-create-room")?.addEventListener("click", safeCreateRoom);
@@ -44,5 +54,4 @@ window.addEventListener("DOMContentLoaded", () => {
   renderCards();
 });
 
-// Les fonctions login, drawCard, discardDrawnCard, renderCards, etc. sont définies ci-dessous...
-// (elles sont déjà dans le script.js précédent et restent valables ici)
+// Tu peux maintenant appeler login(), elle est bien définie plus haut ✅
