@@ -165,6 +165,9 @@ function renderCards() {
 }
 
 function selectCard(index) {
+  document.querySelectorAll(".card").forEach(c => c.classList.remove("highlight"));
+  const cards = document.querySelectorAll(".card");
+  if (cards[index]) cards[index].classList.add("highlight");
   logAction("🟩 Carte sélectionnée: " + playerCards[index]);
 }
 window.selectCard = selectCard;
