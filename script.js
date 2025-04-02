@@ -1,4 +1,3 @@
-
 // script.js (fusionné complet avec logique de jeu + contrôle host + synchro)
 console.log("✅ script.js bien chargé");
 
@@ -183,7 +182,7 @@ function syncTurnToFirebase(turn) {
 function listenToTurnChanges(callback) {
   const roomId = sessionStorage.getItem("roomId");
   if (!roomId) return;
-  const turnRef = ref(db, `games/${roomId}/currentPlayer`);
+  const turnRef = ref(db, `games/${roomId}/currentPlayer");
 
   onValue(turnRef, (snapshot) => {
     const val = snapshot.val();
