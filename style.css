@@ -1,10 +1,65 @@
-/* style.css (ajouté pour afficher les mains côte à côte) */
+/* style.css (fusionné avec version précédente) */
 
 body {
   font-family: 'Comic Sans MS', cursive, sans-serif;
-  background-color: #f5f5dc;
   margin: 0;
   padding: 0;
+  background-color: #f5f5dc;
+  color: #333;
+  text-align: center;
+}
+
+#welcome {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url('https://raw.githubusercontent.com/Rmngbt/Cactus-game/main/acceuil.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 20px;
+  color: white;
+  text-shadow: 1px 1px 4px black;
+}
+
+#welcome input,
+#welcome button {
+  margin: 10px;
+  padding: 12px 20px;
+  font-size: 18px;
+  border-radius: 12px;
+  border: none;
+}
+
+#welcome button {
+  background-color: #32cd32;
+  color: white;
+  cursor: pointer;
+}
+
+#welcome button:hover {
+  background-color: #28a428;
+}
+
+button {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 12px;
+  margin: 5px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  background: #6b8e23;
+  color: white;
+}
+
+#config,
+#lobby,
+#setup,
+#game {
+  margin-top: 30px;
 }
 
 #all-players {
@@ -27,29 +82,18 @@ body {
 }
 
 .player-hand .card {
-  width: 60px;
-  height: 90px;
+  width: 80px;
+  height: 120px;
   background: #4a90e2;
-  border-radius: 8px;
-  color: white;
-  font-weight: bold;
-  font-size: 18px;
-  line-height: 90px;
+  border-radius: 10px;
+  border: 2px solid white;
   text-align: center;
+  line-height: 120px;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
   margin: 5px;
   box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-}
-
-button {
-  font-family: inherit;
-  font-size: 14px;
-  padding: 8px 12px;
-  margin: 5px;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  background: #6b8e23;
-  color: white;
 }
 
 #log {
