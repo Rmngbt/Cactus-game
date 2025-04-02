@@ -33,6 +33,7 @@ function login() {
   sessionStorage.setItem("username", username);
   document.getElementById("welcome").style.display = "none";
   document.getElementById("config").style.display = "block";
+  document.getElementById("player-name").innerText = username;
   logAction("👋 Bienvenue, " + username + " !");
 }
 window.login = login;
@@ -130,6 +131,7 @@ function startGameForAll() {
     playerCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
     opponentCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
     document.getElementById("game").style.display = "block";
+    document.getElementById("player-name").innerText = sessionStorage.getItem("username") || "Moi";
     renderCards();
     updateTurnInfo();
   });
