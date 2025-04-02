@@ -1,4 +1,4 @@
-// ✅ script.js corrigé : interactions visibles + boutons fonctionnels
+// ✅ script.js corrigé : interactions visibles + joueurs + affichage tour
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
 
@@ -15,8 +15,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let playerCards = [], discardPile = [], drawnCard = null;
-let startVisibleCount = 2, cardCount = 4, currentPlayer = 1;
+let playerCards = [], botCards = [], discardPile = [], drawnCard = null;
+let startVisibleCount = 2, cardCount = 4, currentPlayer = "Toi";
 
 const CARD_POOL = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
 const log = (msg) => {
@@ -61,22 +61,26 @@ function launchSetup() {
 }
 
 function saveGameConfig() {
-  log("💾 Config sauvegardée (mock).");
+  log("💾 Config sauvegardée (mock).”);
 }
 
 function startNewGame() {
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   playerCards = Array.from({ length: 4 }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
+  botCards = Array.from({ length: 4 }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
   renderCards();
+  updateTurn();
 }
 
 function drawCard() {
+  if (currentPlayer !== "Toi") return log("⛔ Ce n'est pas ton tour !");
   drawnCard = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
   log(`🃏 Carte piochée : ${drawnCard}`);
 }
 
 function initiateDiscardSwap() {
+  if (currentPlayer !== "Toi") return log("⛔ Ce n'est pas ton tour !");
   if (discardPile.length === 0) return log("❌ Aucune carte dans la défausse");
   drawnCard = discardPile.pop();
   log(`🔁 Carte récupérée de la défausse : ${drawnCard}`);
@@ -93,15 +97,35 @@ function skipSpecial() {
 function renderCards() {
   const container = document.getElementById("all-players");
   container.innerHTML = "";
-  const div = document.createElement("div");
-  div.className = "player-hand";
+
+  // Toi
+  const div1 = document.createElement("div");
+  div1.className = "player-hand";
+  div1.innerHTML = "<h3>Toi</h3>";
   playerCards.forEach((card, i) => {
     const cardDiv = document.createElement("div");
     cardDiv.className = "card";
     cardDiv.innerText = card;
-    div.appendChild(cardDiv);
+    div1.appendChild(cardDiv);
   });
-  container.appendChild(div);
+
+  // Bot
+  const div2 = document.createElement("div");
+  div2.className = "player-hand";
+  div2.innerHTML = "<h3>Bot</h3>";
+  botCards.forEach(() => {
+    const cardDiv = document.createElement("div");
+    cardDiv.className = "card";
+    cardDiv.innerText = "?";
+    div2.appendChild(cardDiv);
+  });
+
+  container.appendChild(div1);
+  container.appendChild(div2);
+}
+
+function updateTurn() {
+  document.getElementById("turn-info").innerText = `Tour de : ${currentPlayer}`;
 }
 
 function setupListeners() {
