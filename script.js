@@ -172,6 +172,8 @@ function renderScoreboard() {
 }
 
 function renderCards() {
+  const name = sessionStorage.getItem("username") || "Joueur";
+  document.getElementById("player-name").innerText = name;
   const container1 = document.getElementById("player-cards");
   const container2 = document.getElementById("opponent-cards");
   if (!container1 || !container2) return;
