@@ -131,9 +131,9 @@ function startGameForAll() {
     playerCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
     opponentCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
     document.getElementById("game").style.display = "block";
-    document.getElementById("player-name").innerText = sessionStorage.getItem("username") || "Moi";
     renderCards();
     updateTurnInfo();
+    renderScoreboard();
   });
 }
 
@@ -163,6 +163,12 @@ window.startNewGame = startNewGame;
 function updateTurnInfo() {
   const info = document.getElementById("turn-info");
   if (info) info.innerText = "Tour du joueur " + currentPlayer;
+}
+
+function renderScoreboard() {
+  const name = sessionStorage.getItem("username") || "Joueur";
+  document.getElementById("player-name").innerText = name;
+  document.getElementById("scoreboard").style.display = "block";
 }
 
 function renderCards() {
