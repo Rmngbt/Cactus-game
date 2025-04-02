@@ -24,7 +24,7 @@
     <h2>Salle d’attente</h2>
     <p>Code de la partie : <span id="lobby-room"></span></p>
     <div id="lobby-players"></div>
-    <button id="start-game" onclick="launchSetup()" style="display:none;">Lancer la partie</button>
+    <button id="start-game" onclick="launchSetup()" style="display:none;">Configurer la partie</button>
   </div>
 
   <div id="setup" class="screen" style="display:none;">
@@ -59,12 +59,10 @@
 
   <div id="log"></div>
 
-  <!-- IMPORTS FIREBASE ET MODULES JEU  -->
-<script type="module" src="script.js"></script>
-<script>
-  console.log("✅ index.html chargé");
-</script>
-
-
+  <!-- ✅ CHARGEMENT DU SCRIPT PRINCIPAL EN MODULE -->
+  <script type="module" src="script.js"></script>
+  <script>
+    console.log("✅ index.html chargé");
+  </script>
 </body>
 </html>
