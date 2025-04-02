@@ -172,23 +172,37 @@ function renderScoreboard() {
 }
 
 function renderCards() {
-  const name = sessionStorage.getItem("username") || "Joueur";
-  document.getElementById("player-name").innerText = name;
-  const container1 = document.getElementById("player-cards");
-  const container2 = document.getElementById("opponent-cards");
-  if (!container1 || !container2) return;
+  const username = sessionStorage.getItem("username");
+  const container = document.getElementById("all-players");
+  container.innerHTML = "";
 
-  container1.innerHTML = playerCards.map((c, i) => `
-    <div class="card-wrapper">
-      <button class="discard-btn" onclick="manualDiscard(1, ${i})">🗑</button>
-      <div class="card" data-index="${i}" data-player="1" onclick="selectCard(this)">?</div>
-    </div>`).join("");
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
 
-  container2.innerHTML = opponentCards.map((c, i) => `
-    <div class="card-wrapper">
-      <button class="discard-btn" onclick="manualDiscard(2, ${i})">🗑</button>
-      <div class="card" data-index="${i}" data-player="2" onclick="selectCard(this)">?</div>
-    </div>`).join("");
+  const playersRef = ref(db, `games/${roomId}/players`);
+  onValue(playersRef, (snapshot) => {
+    const allPlayers = snapshot.val();
+    if (!allPlayers) return;
+
+    Object.keys(allPlayers).forEach((name, index) => {
+      const cards = name === username ? playerCards : opponentCards; // temp: différencier après
+      const playerDiv = document.createElement("div");
+      playerDiv.innerHTML = `
+        <h3>${name === username ? "Moi : " + name : name}</h3>
+        <div class="player-hand" id="cards-${index}">
+          ${cards.map((c, i) => `
+            <div class="card-wrapper">
+              <button class="discard-btn" onclick="manualDiscard(${index + 1}, ${i})">🗑</button>
+              <div class="card" data-index="${i}" data-player="${index + 1}" onclick="selectCard(this)">
+                ${name === username ? c : "?"}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+      container.appendChild(playerDiv);
+    });
+  });
 }
 
 function syncTurnToFirebase(turn) {
