@@ -141,42 +141,146 @@ function saveGameConfig() {
 }
 window.saveGameConfig = saveGameConfig;
 
-// === MÉCANIQUES DE JEU SIMPLIFIÉES POUR TEST ===
-let playerCards = [];
+let playerCards = [], opponentCards = [], discardPile = [], drawnCard = null;
+let currentPlayer = 1, specialAction = false, pendingSpecial = null, selectedForSwap = null;
+let cactusDeclared = false, cactusPlayer = null;
 
-function drawCard() {
-  const card = Math.floor(Math.random() * 10) + 1;
-  playerCards.push(card);
-  renderCards();
-  logAction("🃏 Carte piochée : " + card);
-}
-window.drawCard = drawCard;
-
-function renderCards() {
-  const container = document.getElementById("player-cards");
-  container.innerHTML = "";
-  playerCards.forEach((val, index) => {
-    const card = document.createElement("div");
-    card.className = "card highlight";
-    card.innerText = val;
-    card.onclick = () => selectCard(index);
-    container.appendChild(card);
+function startGameForAll() {
+  const roomId = sessionStorage.getItem("roomId");
+  const configRef = ref(db, `games/${roomId}/config`);
+  onValue(configRef, (snap) => {
+    const config = snap.val();
+    const cardCount = config?.cardCount || 4;
+    const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+    playerCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
+    opponentCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
+    document.getElementById("game").style.display = "block";
+    renderCards();
+    updateTurnInfo();
+    renderScoreboard();
   });
 }
 
-function selectCard(index) {
-  document.querySelectorAll(".card").forEach(c => c.classList.remove("highlight"));
-  const cards = document.querySelectorAll(".card");
-  if (cards[index]) cards[index].classList.add("highlight");
-  logAction("🟩 Carte sélectionnée: " + playerCards[index]);
+function updateTurnInfo() {
+  const info = document.getElementById("turn-info");
+  if (info) info.innerText = "Tour du joueur " + currentPlayer;
+}
+
+function renderScoreboard() {
+  const name = sessionStorage.getItem("username") || "Joueur";
+  document.getElementById("player-name").innerText = name;
+  document.getElementById("scoreboard").style.display = "block";
+}
+
+function renderCards() {
+  const username = sessionStorage.getItem("username");
+  const container = document.getElementById("all-players");
+  container.innerHTML = "";
+
+  const roomId = sessionStorage.getItem("roomId");
+  if (!roomId) return;
+
+  const playersRef = ref(db, `games/${roomId}/players`);
+  onValue(playersRef, (snapshot) => {
+    const allPlayers = snapshot.val();
+    if (!allPlayers) return;
+
+    Object.keys(allPlayers).forEach((name, index) => {
+      const cards = name === username ? playerCards : opponentCards; // temporaire : à adapter
+      const playerDiv = document.createElement("div");
+      playerDiv.innerHTML = `
+        <h3>${name === username ? "Moi : " + name : name}</h3>
+        <div class="player-hand" id="cards-${index}">
+          ${cards.map((c, i) => `
+            <div class="card-wrapper">
+              <button class="discard-btn" onclick="manualDiscard(${index + 1}, ${i})">🗑</button>
+              <div class="card" data-index="${i}" data-player="${index + 1}" onclick="selectCard(this)">
+                ${name === username ? c : "?"}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+      container.appendChild(playerDiv);
+    });
+  });
+}
+
+function selectCard(el) {
+  const index = parseInt(el.dataset.index);
+  const player = parseInt(el.dataset.player);
+  const set = player === 1 ? playerCards : opponentCards;
+  if (specialAction && pendingSpecial === 8 && player === 1) {
+    el.innerText = set[index];
+    setTimeout(() => {
+      el.innerText = "?";
+      specialAction = false;
+    }, 3000);
+    return;
+  }
+  if (specialAction && pendingSpecial === 10 && player !== 1) {
+    el.innerText = set[index];
+    setTimeout(() => {
+      el.innerText = "?";
+      specialAction = false;
+    }, 3000);
+    return;
+  }
+  if (specialAction && pendingSpecial === "V") {
+    // Logique échange simplifiée à implémenter
+  }
 }
 window.selectCard = selectCard;
 
-function startGameForAll() {
-  logAction("🎮 Début de la partie");
-  document.getElementById("game").style.display = "block";
-  playerCards = [];
-  drawCard();
-  drawCard();
+function manualDiscard(player, index) {
+  const set = player === 1 ? playerCards : opponentCards;
+  const card = set[index];
+  const top = discardPile[discardPile.length - 1];
+  if (card === top) {
+    discardPile.push(card);
+    set.splice(index, 1);
+    logAction("✅ Carte défaussée : " + card);
+  } else {
+    discardPile.push(card);
+    set[index] = drawRandomCard();
+    logAction("❌ Mauvaise défausse. Pénalité !");
+  }
   renderCards();
 }
+window.manualDiscard = manualDiscard;
+
+function drawRandomCard() {
+  const pool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function declareCactus() {
+  if (cactusDeclared) return;
+  cactusDeclared = true;
+  cactusPlayer = currentPlayer;
+  logAction("🌵 Cactus déclaré par le joueur " + currentPlayer);
+}
+window.declareCactus = declareCactus;
+
+function skipSpecial() {
+  specialAction = false;
+  pendingSpecial = null;
+  selectedForSwap = null;
+  logAction("⏭ Action spéciale ignorée");
+}
+window.skipSpecial = skipSpecial;
+
+function drawCard() {
+  if (drawnCard !== null) return;
+  drawnCard = drawRandomCard();
+  logAction("🃏 Carte piochée : " + drawnCard);
+}
+window.drawCard = drawCard;
+
+function initiateDiscardSwap() {
+  if (drawnCard === null || discardPile.length === 0) return;
+  const top = discardPile.pop();
+  drawnCard = top;
+  logAction("🔁 Carte prise de la défausse : " + top);
+}
+window.initiateDiscardSwap = initiateDiscardSwap;
