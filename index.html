@@ -1,62 +1,62 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cactus Game</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cactus Game</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="welcome">
-<h1>Bienvenue sur Cactus 🌵</h1>
-<input type="text" id="username" placeholder="Entre ton pseudo">
-<button onclick="login()">Connexion</button>
-</div>
+  <div id="welcome">
+    <h1>Bienvenue sur Cactus 🌵</h1>
+    <input type="text" id="username" placeholder="Entre ton pseudo">
+    <button onclick="login()">Connexion</button>
+  </div>
 
-<div id="config" style="display:none;">
-<h2>Créer ou rejoindre une partie</h2>
-<button onclick="safeCreateRoom()">Créer une partie</button>
-<input type="text" id="room-code" placeholder="Code de partie">
-<button onclick="joinRoom()">Rejoindre une partie</button>
-</div>
+  <div id="config" style="display:none;">
+    <h2>Créer ou rejoindre une partie</h2>
+    <button onclick="safeCreateRoom()">Créer une partie</button>
+    <input type="text" id="room-code" placeholder="Code de partie">
+    <button onclick="joinRoom()">Rejoindre une partie</button>
+  </div>
 
-<div id="lobby" style="display:none;">
-<h2>Salle d’attente</h2>
-<p>Code de la partie : <strong id="lobby-room"></strong></p>
-<div id="lobby-players">En attente de joueurs...</div>
-<button onclick="launchSetup()" id="start-game" style="display:none;">Configurer la partie</button>
-</div>
+  <div id="lobby" style="display:none;">
+    <h2>Salle d’attente</h2>
+    <p>Code de la partie : <strong id="lobby-room"></strong></p>
+    <div id="lobby-players">En attente de joueurs...</div>
+    <button onclick="launchSetup()" id="start-game" style="display:none;">Configurer la partie</button>
+  </div>
 
-<div id="setup" style="display:none;">
-<h2>Configuration de la partie</h2>
-<label>Cartes par joueur : <input type="number" id="card-count" value="4" min="3" max="8"></label><br>
-<label>Cartes visibles au début : <input type="number" id="visible-count" value="2" min="0" max="8"></label><br>
-<label>Score cible : <input type="number" id="target-score" value="3" min="1" max="10"></label><br>
-<button onclick="saveGameConfig()">Enregistrer config</button>
-<button onclick="startNewGame()">Lancer la partie</button>
-</div>
+  <div id="setup" style="display:none;">
+    <h2>Configuration de la partie</h2>
+    <label>Cartes par joueur : <input type="number" id="card-count" value="4" min="3" max="8"></label><br>
+    <label>Cartes visibles au début : <input type="number" id="visible-count" value="2" min="0" max="8"></label><br>
+    <label>Score cible : <input type="number" id="target-score" value="3" min="1" max="10"></label><br>
+    <button onclick="saveGameConfig()">Enregistrer config</button>
+    <button onclick="startNewGame()">Lancer la partie</button>
+  </div>
 
-<div id="game" style="display:none;">
-<div id="scoreboard">
-<strong>Scores</strong>
-<div id="player-name">Moi</div>
-<div id="scores-list"></div>
-</div>
+  <div id="game" style="display:none;">
+    <div id="scoreboard">
+      <strong>Scores</strong>
+      <div id="player-name">Moi</div>
+      <div id="scores-list"></div>
+    </div>
 
-<div id="all-players"></div>
+    <div id="all-players"></div>
 
-<button onclick="drawCard()">Piocher une carte</button>
-<button onclick="initiateDiscardSwap()">Prendre de la défausse</button>
-<button id="skip-special" style="display:none;" onclick="skipSpecial()">Passer l'action spéciale</button>
-<button onclick="declareCactus()">Cactus</button>
+    <button onclick="drawCard()">Piocher une carte</button>
+    <button onclick="initiateDiscardSwap()">Prendre de la défausse</button>
+    <button id="skip-special" style="display:none;" onclick="skipSpecial()">Passer l'action spéciale</button>
+    <button onclick="declareCactus()">Cactus</button>
 
-<div id="discard-pile">Défausse: <span id="discard">Vide</span></div>
-<p id="turn-info">Tour du joueur</p>
-<p id="drawn-card" style="display: none; cursor: pointer;" onclick="discardDrawnCard()">Carte piochée: <span id="new-card"></span></p>
-</div>
+    <div id="discard-pile">Défausse: <span id="discard">Vide</span></div>
+    <p id="turn-info">Tour du joueur</p>
+    <p id="drawn-card" style="display: none; cursor: pointer;" onclick="discardDrawnCard()">Carte piochée: <span id="new-card"></span></p>
+  </div>
 
-<div id="log"></div>
+  <div id="log"></div>
 
-<script type="module" src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>

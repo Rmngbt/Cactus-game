@@ -1,10 +1,6 @@
-// script.js (fusionné complet avec logique de jeu + contrôle host + synchro + mécaniques de jeu)
-console.log("✅ script.js bien chargé");
-
-// === Firebase Init ===
+// script.js (version clean et fonctionnelle)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBd2O4MWVNlY5MOVffdcvMrkj2lLxJcdv0",
@@ -18,367 +14,214 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const auth = getAuth(app);
 
-function logAction(msg) {
-  const log = document.getElementById("log");
-  if (log) log.innerHTML += `<p>${msg}</p>`;
+// === UI & État ===
+let playerCards = [], discardPile = [], drawnCard = null;
+let startVisibleCount = 2, cardCount = 4, currentPlayer = 1;
+
+// === Utils ===
+const CARD_POOL = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+const log = (msg) => {
+  document.getElementById("log").innerHTML += `<p>${msg}</p>`;
   console.log(msg);
-}
+};
 
-function login() {
-  const usernameInput = document.getElementById("username");
-  const username = usernameInput.value.trim();
+// === Auth ===
+window.login = function () {
+  const username = document.getElementById("username").value.trim();
   if (!username) return alert("Entre un pseudo pour continuer.");
   sessionStorage.setItem("username", username);
   document.getElementById("welcome").style.display = "none";
   document.getElementById("config").style.display = "block";
   document.getElementById("player-name").innerText = username;
-  logAction("👋 Bienvenue, " + username + " !");
-}
-window.login = login;
+  log(`👋 Bienvenue, ${username} !`);
+};
 
-function safeCreateRoom() {
+// === Création / Rejoindre ===
+window.safeCreateRoom = function () {
   const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
   const username = sessionStorage.getItem("username");
   sessionStorage.setItem("roomId", roomId);
   sessionStorage.setItem("isHost", "true");
+
   set(ref(db, `games/${roomId}/players/${username}`), { connected: true });
   set(ref(db, `games/${roomId}/host`), username);
   set(ref(db, `games/${roomId}/currentPlayer`), 1);
+
   document.getElementById("config").style.display = "none";
   document.getElementById("lobby").style.display = "block";
   document.getElementById("lobby-room").innerText = roomId;
-  watchLobbyPlayers(roomId);
-  logAction("🔧 Partie créée. Code : " + roomId);
-}
-window.safeCreateRoom = safeCreateRoom;
 
-function joinRoom() {
+  watchLobby(roomId);
+};
+
+window.joinRoom = function () {
   const roomId = document.getElementById("room-code").value.trim().toUpperCase();
   const username = sessionStorage.getItem("username");
-  if (!roomId || !username) return alert("Veuillez entrer un code de partie et un pseudo valides.");
+  if (!roomId || !username) return alert("Code ou pseudo manquant.");
+
   sessionStorage.setItem("roomId", roomId);
   sessionStorage.setItem("isHost", "false");
   set(ref(db, `games/${roomId}/players/${username}`), { connected: true });
+
   document.getElementById("config").style.display = "none";
   document.getElementById("lobby").style.display = "block";
   document.getElementById("lobby-room").innerText = roomId;
-  watchLobbyPlayers(roomId);
-  logAction("🔗 Rejoint la partie : " + roomId);
-}
-window.joinRoom = joinRoom;
 
-function watchLobbyPlayers(roomId) {
-  const lobbyDiv = document.getElementById("lobby-players");
-  const startBtn = document.getElementById("start-game");
+  watchLobby(roomId);
+};
+
+function watchLobby(roomId) {
   const playersRef = ref(db, `games/${roomId}/players`);
   const hostRef = ref(db, `games/${roomId}/host`);
-
-  onValue(hostRef, (snap) => {
-    const host = snap.val();
-    const username = sessionStorage.getItem("username");
-    startBtn.style.display = host === username ? "inline-block" : "none";
-  });
-
-  onValue(playersRef, (snapshot) => {
-    const players = snapshot.val();
-    if (!players) return;
-    const list = Object.keys(players).map(name => `<li>${name}</li>`).join("");
-    lobbyDiv.innerHTML = `<ul>${list}</ul>`;
-  });
-
   const stateRef = ref(db, `games/${roomId}/state`);
-  onValue(stateRef, (snap) => {
-    const state = snap.val();
-    const isHost = sessionStorage.getItem("isHost") === "true";
 
+  onValue(playersRef, snap => {
+    const players = Object.keys(snap.val() || {});
+    document.getElementById("lobby-players").innerHTML = players.map(p => `<li>${p}</li>`).join("");
+    if (players.length >= 2) document.getElementById("start-game").style.display = "inline-block";
+  });
+
+  onValue(hostRef, snap => {
+    const host = snap.val();
+    const isHost = sessionStorage.getItem("username") === host;
+    document.getElementById("start-game").style.display = isHost ? "inline-block" : "none";
+  });
+
+  onValue(stateRef, snap => {
+    const state = snap.val();
     if (state === "setup") {
       document.getElementById("lobby").style.display = "none";
-      if (isHost) {
-        document.getElementById("setup").style.display = "block";
-        logAction("🟢 Vous configurez la partie.");
-      } else {
-        document.getElementById("setup").innerHTML = "<p>⏳ L’hôte configure la partie…</p>";
-        document.getElementById("setup").style.display = "block";
-      }
+      document.getElementById("setup").style.display = "block";
     }
-
     if (state === "started") {
       document.getElementById("setup").style.display = "none";
       document.getElementById("game").style.display = "block";
-      startGameForAll();
+      startGame();
     }
   });
 }
 
-function launchSetup() {
-  const isHost = sessionStorage.getItem("isHost") === "true";
+window.launchSetup = function () {
   const roomId = sessionStorage.getItem("roomId");
-  if (!isHost) return alert("Seul l'hôte peut lancer la partie.");
-  if (!roomId) return;
   set(ref(db, `games/${roomId}/state`), "setup");
-}
-window.launchSetup = launchSetup;
+};
 
-function startNewGame() {
-  const isHost = sessionStorage.getItem("isHost") === "true";
-  if (!isHost) return alert("Seul l'hôte peut démarrer la partie.");
+window.saveGameConfig = function () {
   const roomId = sessionStorage.getItem("roomId");
-  
-  const cardCount = parseInt(document.getElementById("card-count").value);
-const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
-
-const playersRef = ref(db, `games/${roomId}/players`);
-onValue(playersRef, (snap) => {
-  const players = Object.keys(snap.val());
-  players.forEach((player) => {
-    const hand = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
-    set(ref(db, `games/${roomId}/hands/${player}`), hand);
-  });
-
-  set(ref(db, `games/${roomId}/state`), "started");
-
-  // Arrête d'écouter après la génération
-  off(playersRef);
-});
-  
-  
-  
-  
-const playersRef = ref(db, `games/${roomId}/players`);
-onValue(playersRef, (snap) => {
-  const players = Object.keys(snap.val());
-  const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
   const config = {
-    cardCount: parseInt(document.getElementById("card-count").value),
-    startVisibleCount: parseInt(document.getElementById("visible-count").value)
-  };
-
-  players.forEach(player => {
-    const cards = Array.from({ length: config.cardCount }, () => {
-      return cardPool[Math.floor(Math.random() * cardPool.length)];
-    });
-    set(ref(db, `games/${roomId}/hands/${player}`), cards);
-  });
-
-  // Ne plus écouter pour éviter les duplications
-  off(playersRef);
-});
-
-
-
-}
-window.startNewGame = startNewGame;
-
-function saveGameConfig() {
-  const roomId = sessionStorage.getItem("roomId");
-  const configData = {
     cardCount: parseInt(document.getElementById("card-count").value),
     targetScore: parseInt(document.getElementById("target-score").value),
     startVisibleCount: parseInt(document.getElementById("visible-count").value)
   };
-  set(ref(db, `games/${roomId}/config`), configData);
-  logAction("💾 Configuration enregistrée !");
-}
-window.saveGameConfig = saveGameConfig;
+  set(ref(db, `games/${roomId}/config`), config);
+  log("💾 Configuration enregistrée");
+};
 
-let playerCards = [], opponentCards = [], discardPile = [], drawnCard = null;
-let currentPlayer = 1, specialAction = false, pendingSpecial = null, selectedForSwap = null;
-let cactusDeclared = false, cactusPlayer = null;
-let startVisibleCount = 2;
-
-function startGameForAll() {
+window.startNewGame = function () {
   const roomId = sessionStorage.getItem("roomId");
-  const configRef = ref(db, `games/${roomId}/config`);
-  onValue(configRef, (snap) => {
-    const config = snap.val();
-    const cardCount = config?.cardCount || 4;
-    const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
-    
-	const username = sessionStorage.getItem("username");
-const handsRef = ref(db, `games/${roomId}/hands`);
-onValue(handsRef, (snap) => {
-  const hands = snap.val();
-  playerCards = hands[username] || [];
-  opponentCards = []; // Masquées
+  const cardCount = parseInt(document.getElementById("card-count").value);
+  const playersRef = ref(db, `games/${roomId}/players`);
 
-  document.getElementById("game").style.display = "block";
-  renderCards();
-  updateTurnInfo();
-  renderScoreboard();
-  revealInitialCards();
-});
-	
-	
-    document.getElementById("game").style.display = "block";
+  onValue(playersRef, snap => {
+    const players = Object.keys(snap.val());
+    players.forEach(p => {
+      const hand = Array.from({ length: cardCount }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
+      set(ref(db, `games/${roomId}/hands/${p}`), hand);
+    });
+    set(ref(db, `games/${roomId}/state`), "started");
+    off(playersRef);
+  });
+};
+
+function startGame() {
+  const roomId = sessionStorage.getItem("roomId");
+  const username = sessionStorage.getItem("username");
+  const handsRef = ref(db, `games/${roomId}/hands/${username}`);
+
+  onValue(handsRef, snap => {
+    playerCards = snap.val() || [];
     renderCards();
+    revealInitialCards();
     updateTurnInfo();
-    renderScoreboard();
-	 revealInitialCards();
   });
 }
 
-function updateTurnInfo() {
-  const info = document.getElementById("turn-info");
-  if (info) info.innerText = "Tour du joueur " + currentPlayer;
-}
-
-function renderScoreboard() {
-  const name = sessionStorage.getItem("username") || "Joueur";
-  document.getElementById("player-name").innerText = name;
-  document.getElementById("scoreboard").style.display = "block";
-}
-
 function renderCards() {
-  const currentUser = sessionStorage.getItem("username");
-  const isHost = sessionStorage.getItem("isHost") === "true";
+  const container = document.getElementById("all-players");
+  container.innerHTML = "";
 
-  const allPlayersContainer = document.getElementById("all-players");
-  allPlayersContainer.innerHTML = "";
+  const div = document.createElement("div");
+  div.className = "player-hand";
+  playerCards.forEach((_, i) => {
+    const cardWrapper = document.createElement("div");
+    cardWrapper.classList.add("card-wrapper");
 
-  const renderSet = (cards, ownerName, isCurrentUser) => {
-    const div = document.createElement("div");
-    div.className = "player-hand";
-    const title = document.createElement("h3");
-    title.innerText = isCurrentUser ? `${ownerName} (Moi)` : ownerName;
-    div.appendChild(title);
+    const cardDiv = document.createElement("div");
+    cardDiv.classList.add("card");
+    cardDiv.dataset.index = i;
+    cardDiv.innerText = "?";
 
-    cards.forEach((card, i) => {
-      const cardWrapper = document.createElement("div");
-      cardWrapper.classList.add("card-wrapper");
-
-      const cardDiv = document.createElement("div");
-      cardDiv.classList.add("card");
-      cardDiv.dataset.index = i;
-      cardDiv.innerText = isCurrentUser ? "?" : "?";
-
-      if (isCurrentUser) {
-        cardDiv.onclick = () => selectCard(cardDiv);
-        const discardBtn = document.createElement("button");
-        discardBtn.innerText = "🗑";
-        discardBtn.classList.add("discard-btn");
-        discardBtn.onclick = (e) => {
-          e.stopPropagation();
-          manualDiscard(currentPlayer, i);
-        };
-        cardWrapper.appendChild(discardBtn);
-      }
-
-      cardWrapper.appendChild(cardDiv);
-      div.appendChild(cardWrapper);
-    });
-
-    allPlayersContainer.appendChild(div);
-  };
-
-  // Rendu de chaque main
-  renderSet(playerCards, currentUser, true);
-  renderSet(opponentCards, "Adversaire", false);
+    cardWrapper.appendChild(cardDiv);
+    div.appendChild(cardWrapper);
+  });
+  container.appendChild(div);
 }
-
-
-function selectCard(el) {
-  const index = parseInt(el.dataset.index);
-  const player = parseInt(el.dataset.player);
-  const set = player === 1 ? playerCards : opponentCards;
-  if (specialAction && pendingSpecial === 8 && player === 1) {
-    el.innerText = set[index];
-    setTimeout(() => {
-      el.innerText = "?";
-      specialAction = false;
-    }, 3000);
-    return;
-  }
-  if (specialAction && pendingSpecial === 10 && player !== 1) {
-    el.innerText = set[index];
-    setTimeout(() => {
-      el.innerText = "?";
-      specialAction = false;
-    }, 3000);
-    return;
-  }
-  if (specialAction && pendingSpecial === "V") {
-    // Logique échange simplifiée à implémenter
-  }
-}
-window.selectCard = selectCard;
-
-function manualDiscard(player, index) {
-  const set = player === 1 ? playerCards : opponentCards;
-  const card = set[index];
-  const top = discardPile[discardPile.length - 1];
-  if (card === top) {
-    discardPile.push(card);
-    set.splice(index, 1);
-    logAction("✅ Carte défaussée : " + card);
-  } else {
-    discardPile.push(card);
-    set[index] = drawRandomCard();
-    logAction("❌ Mauvaise défausse. Pénalité !");
-  }
-  if (player !== currentPlayer) return logAction("❌ Ce n’est pas votre tour !");
-  renderCards();
-}
-window.manualDiscard = manualDiscard;
-
-function drawRandomCard() {
-  const pool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
-function declareCactus() {
-  if (cactusDeclared) return;
-  cactusDeclared = true;
-  cactusPlayer = currentPlayer;
-  logAction("🌵 Cactus déclaré par le joueur " + currentPlayer);
-}
-window.declareCactus = declareCactus;
-
-function skipSpecial() {
-  specialAction = false;
-  pendingSpecial = null;
-  selectedForSwap = null;
-  logAction("⏭ Action spéciale ignorée");
-}
-window.skipSpecial = skipSpecial;
-
-function drawCard() {
-  if (drawnCard !== null) return;
-  drawnCard = drawRandomCard();
-  logAction("🃏 Carte piochée : " + drawnCard);
-}
-window.drawCard = drawCard;
-
-function initiateDiscardSwap() {
-  if (drawnCard === null || discardPile.length === 0) return;
-  const top = discardPile.pop();
-  drawnCard = top;
-  logAction("🔁 Carte prise de la défausse : " + top);
-}
-window.initiateDiscardSwap = initiateDiscardSwap;
-
 
 function revealInitialCards() {
-  const username = sessionStorage.getItem("username");
-  const handDiv = document.querySelector(`#all-players .player-hand`);
-  if (!handDiv) return;
+  const start = parseInt(document.getElementById("visible-count").value) || 2;
+  const cards = document.querySelectorAll(".card");
   let revealed = 0;
-  const cards = handDiv.querySelectorAll(".card");
-  cards.forEach(cardEl => {
-    cardEl.classList.add("selectable-start");
-    cardEl.onclick = () => {
-      if (revealed >= startVisibleCount) return;
-      const index = parseInt(cardEl.dataset.index);
-      cardEl.innerText = playerCards[index];
+
+  cards.forEach(card => {
+    card.classList.add("selectable-start");
+    card.onclick = () => {
+      if (revealed >= start) return;
+      const i = parseInt(card.dataset.index);
+      card.innerText = playerCards[i];
       revealed++;
-      if (revealed === startVisibleCount) {
-        logAction(`👀 ${username}, cartes initiales vues.`);
-        setTimeout(() => {
-          cards.forEach((c, i) => c.innerText = "?");
-          renderCards();
-        }, 4000);
+      if (revealed === start) {
+        log("👀 Cartes de départ vues.");
+        setTimeout(() => renderCards(), 4000);
       }
     };
   });
 }
+
+function updateTurnInfo() {
+  document.getElementById("turn-info").innerText = `Tour du joueur ${currentPlayer}`;
+}
+
+// === Game Actions (simplifiées) ===
+window.drawCard = function () {
+  if (drawnCard !== null) return;
+  drawnCard = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
+  document.getElementById("new-card").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "block";
+  log(`🃏 Carte piochée : ${drawnCard}`);
+};
+
+window.initiateDiscardSwap = function () {
+  if (drawnCard !== null || discardPile.length === 0) return;
+  drawnCard = discardPile.pop();
+  document.getElementById("new-card").innerText = drawnCard;
+  document.getElementById("drawn-card").style.display = "block";
+  log(`🔁 Carte prise dans la défausse : ${drawnCard}`);
+};
+
+window.discardDrawnCard = function () {
+  if (!drawnCard) return;
+  discardPile.push(drawnCard);
+  document.getElementById("discard").innerText = drawnCard;
+  drawnCard = null;
+  document.getElementById("drawn-card").style.display = "none";
+  renderCards();
+};
+
+window.declareCactus = function () {
+  log("🌵 Cactus ! Fin imminente de la manche.");
+};
+
+window.skipSpecial = function () {
+  log("⏭ Action spéciale ignorée");
+};
