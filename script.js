@@ -126,6 +126,28 @@ function startNewGame() {
   if (!isHost) return alert("Seul l'hôte peut démarrer la partie.");
   const roomId = sessionStorage.getItem("roomId");
   set(ref(db, `games/${roomId}/state`), "started");
+const playersRef = ref(db, `games/${roomId}/players`);
+onValue(playersRef, (snap) => {
+  const players = Object.keys(snap.val());
+  const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
+  const config = {
+    cardCount: parseInt(document.getElementById("card-count").value),
+    startVisibleCount: parseInt(document.getElementById("visible-count").value)
+  };
+
+  players.forEach(player => {
+    const cards = Array.from({ length: config.cardCount }, () => {
+      return cardPool[Math.floor(Math.random() * cardPool.length)];
+    });
+    set(ref(db, `games/${roomId}/hands/${player}`), cards);
+  });
+
+  // Ne plus écouter pour éviter les duplications
+  off(playersRef);
+});
+
+
+
 }
 window.startNewGame = startNewGame;
 
@@ -153,8 +175,22 @@ function startGameForAll() {
     const config = snap.val();
     const cardCount = config?.cardCount || 4;
     const cardPool = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
-    playerCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
-    opponentCards = Array.from({ length: cardCount }, () => cardPool[Math.floor(Math.random() * cardPool.length)]);
+    
+	const username = sessionStorage.getItem("username");
+const handsRef = ref(db, `games/${roomId}/hands`);
+onValue(handsRef, (snap) => {
+  const hands = snap.val();
+  playerCards = hands[username] || [];
+  opponentCards = []; // Masquées
+
+  document.getElementById("game").style.display = "block";
+  renderCards();
+  updateTurnInfo();
+  renderScoreboard();
+  revealInitialCards();
+});
+	
+	
     document.getElementById("game").style.display = "block";
     renderCards();
     updateTurnInfo();
@@ -179,34 +215,22 @@ function renderCards() {
   const container = document.getElementById("all-players");
   container.innerHTML = "";
 
-  const roomId = sessionStorage.getItem("roomId");
-  if (!roomId) return;
+  const current = playerCards;
 
-  const playersRef = ref(db, `games/${roomId}/players`);
-  onValue(playersRef, (snapshot) => {
-    const allPlayers = snapshot.val();
-    if (!allPlayers) return;
-
-    Object.keys(allPlayers).forEach((name, index) => {
-      const cards = name === username ? playerCards : opponentCards; // temporaire : à adapter
-      const playerDiv = document.createElement("div");
-      playerDiv.innerHTML = `
-        <h3>${name === username ? "Moi : " + name : name}</h3>
-        <div class="player-hand" id="cards-${index}">
-          ${cards.map((c, i) => `
-            <div class="card-wrapper">
-              <button class="discard-btn" onclick="manualDiscard(${index + 1}, ${i})">🗑</button>
-              <div class="card" data-index="${i}" data-player="${index + 1}" onclick="selectCard(this)">
-                ${name === username ? c : "?"}
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      `;
-      container.appendChild(playerDiv);
-    });
+  current.forEach((card, index) => {
+    const cardEl = document.createElement("div");
+    cardEl.className = "card";
+    cardEl.dataset.index = index;
+    cardEl.innerText = "?";
+    cardEl.onclick = () => {
+      cardEl.classList.toggle("highlight");
+    };
+    container.appendChild(cardEl);
   });
 }
+
+
+
 
 function selectCard(el) {
   const index = parseInt(el.dataset.index);
