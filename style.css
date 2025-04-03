@@ -98,6 +98,39 @@ button {
   box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
 }
 
+#center-zone, #central-piles {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+#center-zone .card, #central-piles .card {
+  width: 80px;
+  height: 120px;
+  background: #d2691e;
+  border-radius: 10px;
+  color: white;
+  font-size: 20px;
+  line-height: 120px;
+  font-weight: bold;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+  cursor: pointer;
+}
+
+#drawn-card {
+  font-weight: bold;
+  margin-top: 10px;
+  color: #333;
+  background: #fff;
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
 #log {
   border: 2px dashed black;
   padding: 10px;
