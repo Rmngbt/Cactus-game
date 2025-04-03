@@ -43,16 +43,20 @@
       <div id="scores-list"></div>
     </div>
 
-    <div id="center-zone" style="display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 10px; margin: 20px auto; padding: 20px 0;">
-  <div style="display: flex; justify-content: center; gap: 40px;">
-    <div class="card" id="draw-pile">Pioche</div>
-    <div class="card" id="discard-pile">Défausse</div>
+        <div class="card" id="discard-pile">Défausse</div>
   </div>
   
 </div>
 
 
-    <div id="all-players"></div>
+    <div id="center-zone" style="display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 10px; margin: 20px auto; padding: 20px 0;">
+  <div style="display: flex; justify-content: center; gap: 40px;">
+    <div class="card" id="draw-pile">Pioche</div>
+    <div class="card" id="discard-pile">Défausse</div>
+  </div>
+</div>
+
+<div id="all-players"></div>
 
     <button id="btn-draw-card">Piocher une carte</button>
     <button id="btn-discard-swap">Prendre de la défausse</button>
@@ -60,7 +64,7 @@
     <button id="btn-declare-cactus">Cactus</button>
 
         <p id="turn-info">Tour du joueur</p>
-    <p id="drawn-card" style="display: none; cursor: pointer;">Carte piochée: <span id="new-card"></span></p>
+    <p id="drawn-card" style="display: none; text-align: center;">Carte piochée: <span id="new-card"></span></p>
   </div>
 
   <div id="log"></div>
