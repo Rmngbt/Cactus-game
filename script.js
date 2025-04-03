@@ -67,7 +67,18 @@ function startNewGame() {
   playerCards = Array.from({ length: cardCount }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
   botCards = Array.from({ length: cardCount }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
   revealedIndexes = [];
+
+  // Affichage temporaire des cartes visibles
+  for (let i = 0; i < startVisibleCount; i++) {
+    revealedIndexes.push(i);
+  }
+
   renderCards();
+
+  setTimeout(() => {
+    revealedIndexes = [];
+    renderCards();
+  }, 5000);
   updateTurn();
 }
 
@@ -146,23 +157,7 @@ function renderCards() {
     c.innerText = revealedIndexes.includes(i) ? card : "?";
     c.dataset.index = i;
 
-    c.onclick = () => {
-      if (drawnCard) {
-        attemptCardSwap(i);
-        return;
-      }
-      if (!revealedIndexes.includes(i) && revealedIndexes.length < startVisibleCount) {
-        revealedIndexes.push(i);
-        c.innerText = card;
-        setTimeout(() => {
-          if (!drawnCard) {
-            c.innerText = "?";
-            revealedIndexes = revealedIndexes.filter(idx => idx !== i);
-            renderCards();
-          }
-        }, 5000);
-      }
-    };
+    // Clic sur carte du bot désactivé, on passe uniquement par le bouton 🗑
 
     const trash = document.createElement("button");
     trash.innerText = "🗑";
@@ -185,15 +180,28 @@ function renderCards() {
     const c = document.createElement("div");
     c.className = "card";
     c.innerText = "?";
-    c.onclick = () => attemptBotCardPlay(i, card);
+    c.onclick = () => {
+      const topDiscard = discardPile[discardPile.length - 1];
+      if (!topDiscard) return log("❌ Il n'y a pas de carte dans la défausse.");
+
+      if (botCard === topDiscard) {
+        log(`🎯 Bonne tentative ! Carte ${botCard} retirée du Bot. Tu lui donnes une de tes cartes.`);
+        discardPile.push(botCards[index]);
+        botCards[index] = playerCards.pop();
+      } else {
+        log(`❌ Mauvaise tentative. Tu prends une carte de pénalité.`);
+        playerCards.push(CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
+      }
+      renderCards();
+    };
 
     const trash = document.createElement("button");
-    trash.innerText = "🗑";
-    trash.className = "discard-btn";
-    trash.onclick = () => attemptBotCardPlay(i, card);
+trash.innerText = "🗑";
+trash.className = "discard-btn";
+trash.onclick = () => attemptBotCardPlay(i, card);
 
-    wrap.appendChild(trash);
-    wrap.appendChild(c);
+wrap.appendChild(trash);
+wrap.appendChild(c);
     div2.appendChild(wrap);
   });
 
