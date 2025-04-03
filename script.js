@@ -218,11 +218,15 @@ function renderCards() {
     trashBtn.onclick = () => discardCardFromHand(i);
 
     wrap.appendChild(trashBtn);
-    wrap.appendChild(c);
+    const botTrashBtn = document.createElement("button");
+botTrashBtn.innerText = "🗑️";
+botTrashBtn.className = "discard-btn";
+botTrashBtn.onclick = () => discardOpponentCard(i);
+wrap.appendChild(botTrashBtn);
+wrap.appendChild(c);
     playerHandDiv.appendChild(wrap);
   });
 
-  // ✅ Ajout du rendu du bot ici :
   const botHandDiv = document.getElementById("opponent-hand");
   botHandDiv.innerHTML = "<h3>Bot</h3>";
   botCards.forEach((card, i) => {
@@ -279,6 +283,28 @@ function attemptBotCardPlay(index, botCard) {
     const penalty = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
     playerCards.push(penalty);
     log(`❌ Mauvaise tentative sur la carte de l'adversaire. Vous piochez une carte de pénalité (${penalty}).`);
+  }
+  renderCards();
+}
+
+function discardOpponentCard(index) {
+  const card = botCards[index];
+  const topDiscard = discardPile[discardPile.length - 1];
+  if (!topDiscard) return log("❌ Aucune carte dans la défausse.");
+
+  if (card === topDiscard) {
+    log(`🎯 Bonne défausse ! La carte ${card} correspond à la défausse.`);
+    discardPile.push(card);
+    // retirer la carte du bot et lui donner une de nos cartes (dernière)
+    if (playerCards.length > 0) {
+      botCards[index] = playerCards.pop();
+    } else {
+      botCards[index] = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
+    }
+  } else {
+    const penalty = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
+    playerCards.push(penalty);
+    log(`❌ Mauvaise tentative. Vous piochez une pénalité (${penalty}).`);
   }
   renderCards();
 }
