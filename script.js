@@ -147,7 +147,7 @@ function renderCards() {
     c.dataset.index = i;
 
     c.onclick = () => {
-      if (drawnCard && revealedIndexes.includes(i)) {
+      if (drawnCard) {
         attemptCardSwap(i);
         return;
       }
