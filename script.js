@@ -179,83 +179,87 @@ function initiateDiscardSwap() {
   showDrawnCard();
 }
 
-
 function renderCards() {
   const playerHandDiv = document.getElementById("player-hand");
-  if (playerHandDiv) {
-    playerHandDiv.innerHTML = `<h3>${sessionStorage.getItem("username") || "Moi"}</h3>`;
-    playerCards.forEach((card, i) => {
-      const wrap = document.createElement("div");
-      wrap.className = "card-wrapper";
-      const c = document.createElement("div");
-      c.className = "card";
-      c.innerText = revealedIndexes.includes(i) ? card : "?";
+  playerHandDiv.innerHTML = `<h3>${sessionStorage.getItem("username") || "Moi"}</h3>`;
+  playerCards.forEach((card, i) => {
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrapper";
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerText = revealedIndexes.includes(i) ? card : "?";
 
-      if (selectingInitialCards) {
-        c.classList.add("selectable-start");
-        c.onclick = () => {
-          if (!revealedIndexes.includes(i)) {
-            if (revealedIndexes.length < startVisibleCount) {
-              revealedIndexes.push(i);
-              renderCards();
-              if (revealedIndexes.length === startVisibleCount) {
-                log("👀 Cartes sélectionnées. Affichage temporaire...");
-                setTimeout(() => {
-                  revealedIndexes = [];
-                  selectingInitialCards = false;
-                  renderCards();
-                  log("🕑 Cartes de nouveau cachées.");
-                }, 5000);
-              }
-            } else {
-              log("⛔ Nombre maximum de cartes sélectionnées atteint.");
-            }
-          }
-        };
-      } else {
-        c.onclick = () => {
-          if (specialAction === "revealSelf") {
-            if (!revealedIndexes.includes(i)) {
-              revealedIndexes.push(i);
-              log(`👁️ Vous regardez votre carte : ${card}`);
-            }
-            specialAction = null;
-            document.getElementById("skip-special").style.display = "none";
+    if (selectingInitialCards) {
+      c.classList.add("selectable-start");
+      c.onclick = () => {
+        if (!revealedIndexes.includes(i)) {
+          if (revealedIndexes.length < startVisibleCount) {
+            revealedIndexes.push(i);
             renderCards();
-            endPlayerTurn();
-          } else if (specialAction === "swapJack") {
-            if (jackSwapSelectedIndex === null) {
-              jackSwapSelectedIndex = i;
-              log(`🤝 Vous avez sélectionné votre carte en position ${i + 1} pour l'échange.`);
-            } else {
-              jackSwapSelectedIndex = i;
-              log(`🔄 Nouvelle sélection : ${i + 1}.`);
+            if (revealedIndexes.length === startVisibleCount) {
+              log("👀 Cartes sélectionnées. Affichage temporaire...");
+              setTimeout(() => {
+                revealedIndexes = [];
+                selectingInitialCards = false;
+                renderCards();
+                log("🕑 Cartes de nouveau cachées.");
+              }, 5000);
             }
-          } else if (drawnCard !== null) {
-            attemptCardSwap(i);
           }
-        };
-      }
+        }
+      };
+    } else {
+      c.onclick = () => handleCardClick(i, card);
+    }
 
-      // bouton défausse éclair
-      const trashBtn = document.createElement("button");
-      trashBtn.innerText = "🗑️";
-      trashBtn.className = "discard-btn";
-      trashBtn.onclick = () => discardCardFromHand(i);
+    const trashBtn = document.createElement("button");
+    trashBtn.innerText = "🗑️";
+    trashBtn.className = "discard-btn";
+    trashBtn.onclick = () => discardCardFromHand(i);
 
-      wrap.appendChild(trashBtn);
-      wrap.appendChild(c);
-      playerHandDiv.appendChild(wrap);
-    });
-  }
+    wrap.appendChild(trashBtn);
+    wrap.appendChild(c);
+    playerHandDiv.appendChild(wrap);
+  });
 
-  // appel existant pour afficher les cartes du bot (inchangé ici)
-  if (typeof renderBotCards === "function") renderBotCards();
+  // ✅ Ajout du rendu du bot ici :
+  const botHandDiv = document.getElementById("opponent-hand");
+  botHandDiv.innerHTML = "<h3>Bot</h3>";
+  botCards.forEach((card, i) => {
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrapper";
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerText = "?";
+
+    if (specialAction === "lookOpp") {
+      c.onclick = () => {
+        c.innerText = card;
+        log(`👁️ Carte du bot en position ${i + 1} : ${card}`);
+        setTimeout(() => renderCards(), 2000);
+        specialAction = null;
+        document.getElementById("skip-special").style.display = "none";
+      };
+    } else if (specialAction === "swapJack" && jackSwapSelectedIndex !== null) {
+      c.onclick = () => {
+        const tmp = playerCards[jackSwapSelectedIndex];
+        playerCards[jackSwapSelectedIndex] = botCards[i];
+        botCards[i] = tmp;
+        log(`🔄 Échange avec le bot (position ${i + 1}).`);
+        specialAction = null;
+        jackSwapSelectedIndex = null;
+        document.getElementById("skip-special").style.display = "none";
+        renderCards();
+      };
+    }
+
+    wrap.appendChild(c);
+    botHandDiv.appendChild(wrap);
+  });
 
   const discardElem = document.getElementById("discard");
   if (discardElem) discardElem.innerText = discardPile.length > 0 ? discardPile[discardPile.length - 1] : "Vide";
 }
-
 
 
 function attemptBotCardPlay(index, botCard) {
