@@ -1,4 +1,4 @@
-// ✅ script.js avec gestion des cartes visibles, interactions et défausse
+// ✅ script.js avec logique corrigée : affichage mémoire, clic limité, interactions actives
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
 
@@ -16,7 +16,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 let playerCards = [], botCards = [], discardPile = [], drawnCard = null;
-let startVisibleCount = 2, cardCount = 4, currentPlayer = "Toi";
+let startVisibleCount = 2, cardCount = 4, currentPlayer = "Toi", revealedIndexes = [];
 
 const CARD_POOL = ["R", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "V", "D"];
 const log = (msg) => {
@@ -66,6 +66,7 @@ function startNewGame() {
   document.getElementById("game").style.display = "block";
   playerCards = Array.from({ length: cardCount }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
   botCards = Array.from({ length: cardCount }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
+  revealedIndexes = [];
   renderCards();
   updateTurn();
 }
@@ -90,7 +91,6 @@ function showDrawnCard() {
   }
 }
 
-
 function discardDrawnCard() {
   if (!drawnCard) return;
   discardPile.push(drawnCard);
@@ -113,12 +113,6 @@ function attemptCardSwap(index) {
   renderCards();
 }
 
-
-
-
-
-
-
 function discardCardFromHand(index) {
   const card = playerCards[index];
   discardPile.push(card);
@@ -139,7 +133,6 @@ function renderCards() {
   const container = document.getElementById("all-players");
   container.innerHTML = "";
 
-  // Toi
   const div1 = document.createElement("div");
   div1.className = "player-hand";
   div1.innerHTML = "<h3>Toi</h3>";
@@ -150,16 +143,23 @@ function renderCards() {
 
     const c = document.createElement("div");
     c.className = "card";
-    c.innerText = "?";
+    c.innerText = revealedIndexes.includes(i) ? card : "?";
     c.dataset.index = i;
 
     c.onclick = () => {
-      if (!c.classList.contains("revealed")) {
-        c.classList.add("revealed");
+      if (drawnCard && revealedIndexes.includes(i)) {
+        attemptCardSwap(i);
+        return;
+      }
+      if (!revealedIndexes.includes(i) && revealedIndexes.length < startVisibleCount) {
+        revealedIndexes.push(i);
         c.innerText = card;
         setTimeout(() => {
-          c.innerText = "?";
-          c.classList.remove("revealed");
+          if (!drawnCard) {
+            c.innerText = "?";
+            revealedIndexes = revealedIndexes.filter(idx => idx !== i);
+            renderCards();
+          }
         }, 5000);
       }
     };
@@ -201,15 +201,6 @@ function renderCards() {
   container.appendChild(div2);
 }
 
- 
-
-function revealCardTemporarily(cardElement, actualValue) {
-  cardElement.innerText = actualValue;
-  setTimeout(() => {
-    cardElement.innerText = "?";
-  }, 5000);
-}
-
 function attemptBotCardPlay(index, botCard) {
   const topDiscard = discardPile[discardPile.length - 1];
   if (botCard === topDiscard) {
@@ -222,7 +213,6 @@ function attemptBotCardPlay(index, botCard) {
   }
   renderCards();
 }
-
 
 function updateTurn() {
   document.getElementById("turn-info").innerText = `Tour de : ${currentPlayer}`;
