@@ -215,7 +215,7 @@ function attemptBotCardPlay(index, botCard) {
   }
   renderCards();
 }
-}
+
 
 function updateTurn() {
   document.getElementById("turn-info").innerText = `Tour de : ${currentPlayer}`;
