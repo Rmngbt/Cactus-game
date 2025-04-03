@@ -90,20 +90,11 @@ function showDrawnCard() {
   }
 }
 
+
 function discardDrawnCard() {
   if (!drawnCard) return;
   discardPile.push(drawnCard);
   log(`🗑 Carte piochée défaussée : ${drawnCard}`);
-  drawnCard = null;
-  document.getElementById("drawn-card").style.display = "none";
-  document.getElementById("discard-drawn")?.remove();
-  renderCards();
-}`);
-  drawnCard = null;
-  document.getElementById("drawn-card").style.display = "none";
-  document.getElementById("discard-drawn")?.remove();
-  renderCards();
-}`);
   drawnCard = null;
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
@@ -120,16 +111,13 @@ function attemptCardSwap(index) {
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
   renderCards();
-} → ${playerCards[index]}`);
-  document.getElementById("drawn-card").style.display = "none";
-  document.getElementById("discard-drawn")?.remove();
-  renderCards();
-} → ${drawnCard}`);
-  drawnCard = null;
-  document.getElementById("drawn-card").style.display = "none";
-  document.getElementById("discard-drawn")?.remove();
-  renderCards();
 }
+
+
+
+
+
+
 
 function discardCardFromHand(index) {
   const card = playerCards[index];
