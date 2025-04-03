@@ -142,7 +142,9 @@ function renderCards() {
 
     const c = document.createElement("div");
     c.className = "card";
-    c.innerText = i < startVisibleCount ? card : "?";
+    c.innerText = "?";
+    c.onclick = () => revealCardTemporarily(c, card);
+
     if (drawnCard !== null && i < startVisibleCount) {
       c.onclick = () => attemptCardSwap(i);
     }
@@ -160,15 +162,42 @@ function renderCards() {
   const div2 = document.createElement("div");
   div2.className = "player-hand";
   div2.innerHTML = "<h3>Bot</h3>";
-  botCards.forEach(() => {
+  botCards.forEach((card, i) => {
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrapper";
+
     const c = document.createElement("div");
     c.className = "card";
     c.innerText = "?";
-    div2.appendChild(c);
+    c.onclick = () => attemptBotCardPlay(i, card);
+
+    wrap.appendChild(c);
+    div2.appendChild(wrap);
   });
 
   container.appendChild(div1);
   container.appendChild(div2);
+} 
+
+function revealCardTemporarily(cardElement, actualValue) {
+  cardElement.innerText = actualValue;
+  setTimeout(() => {
+    cardElement.innerText = "?";
+  }, 5000);
+}
+
+function attemptBotCardPlay(index, botCard) {
+  const topDiscard = discardPile[discardPile.length - 1];
+  if (botCard === topDiscard) {
+    log(`🎯 Bonne pioche ! Carte ${botCard} défaussée du Bot. Tu lui donnes une de tes cartes.`);
+    discardPile.push(botCards[index]);
+    botCards[index] = playerCards.pop();
+  } else {
+    log(`❌ Mauvaise tentative. Tu prends une carte de pénalité.`);
+    playerCards.push(CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
+  }
+  renderCards();
+}
 }
 
 function updateTurn() {
