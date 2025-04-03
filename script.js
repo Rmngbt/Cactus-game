@@ -103,6 +103,11 @@ function discardDrawnCard() {
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
   renderCards();
+}`);
+  drawnCard = null;
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("discard-drawn")?.remove();
+  renderCards();
 }
 
 function attemptCardSwap(index) {
@@ -112,6 +117,10 @@ function attemptCardSwap(index) {
   drawnCard = null;
   discardPile.push(old);
   log(`🔄 Carte échangée : ${old} → ${playerCards[index]}`);
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("discard-drawn")?.remove();
+  renderCards();
+} → ${playerCards[index]}`);
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
   renderCards();
