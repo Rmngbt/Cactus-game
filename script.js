@@ -193,7 +193,7 @@ function renderCards() {
   container.appendChild(div1);
   container.appendChild(div2);
 }
-}
+
  
 
 function revealCardTemporarily(cardElement, actualValue) {
