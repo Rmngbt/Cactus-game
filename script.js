@@ -93,7 +93,12 @@ function showDrawnCard() {
 function discardDrawnCard() {
   if (!drawnCard) return;
   discardPile.push(drawnCard);
-  log(`🗑 Carte défaussée : ${drawnCard}`);
+  log(`🗑 Carte piochée défaussée : ${drawnCard}`);
+  drawnCard = null;
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("discard-drawn")?.remove();
+  renderCards();
+}`);
   drawnCard = null;
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
@@ -104,8 +109,13 @@ function attemptCardSwap(index) {
   if (drawnCard === null) return;
   const old = playerCards[index];
   playerCards[index] = drawnCard;
+  drawnCard = null;
   discardPile.push(old);
-  log(`🔄 Carte échangée : ${old} → ${drawnCard}`);
+  log(`🔄 Carte échangée : ${old} → ${playerCards[index]}`);
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("discard-drawn")?.remove();
+  renderCards();
+} → ${drawnCard}`);
   drawnCard = null;
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
