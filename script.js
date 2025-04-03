@@ -141,6 +141,26 @@ function initiateDiscardSwap() {
 }
 
 function renderCards() {
+  const centerZone = document.getElementById("center-zone");
+  centerZone.innerHTML = "";
+  centerZone.style.display = "flex";
+  centerZone.style.justifyContent = "center";
+  centerZone.style.gap = "40px";
+  centerZone.style.margin = "20px 0";
+
+  // Défausse centrale
+  const discard = document.createElement("div");
+  discard.className = "card";
+  discard.innerText = discardPile.length > 0 ? discardPile[discardPile.length - 1] : "Défausse";
+
+  // Pioche centrale
+  const draw = document.createElement("div");
+  draw.className = "card";
+  draw.innerText = "Pioche";
+  draw.onclick = drawCard;
+
+  centerZone.appendChild(draw);
+  centerZone.appendChild(discard);
   const container = document.getElementById("all-players");
   container.innerHTML = "";
 
