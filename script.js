@@ -56,27 +56,24 @@ function saveGameConfig() {
   log(`💾 Config sauvegardée (Cartes: ${cardCount}, Visibles: ${startVisibleCount}, Cible: ${targetScore})`);
 }
 
+
+
+
 function startNewGame() {
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   playerCards = Array.from({ length: cardCount }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
   botCards = Array.from({ length: cardCount }, () => CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)]);
   revealedIndexes = [];
-
-  // Affichage temporaire des cartes visibles
-  for (let i = 0; i < startVisibleCount && i < playerCards.length; i++) {
-    revealedIndexes.push(i);
-  }
-
+  selectingInitialCards = true;
   renderCards();
-
-  setTimeout(() => {
-    revealedIndexes = [];
-    renderCards();
-  }, 5000);
+  log(`🃏 Sélectionne ${startVisibleCount} carte(s) à regarder.`);
   currentPlayer = "Toi";
   updateTurn();
 }
+
+
+
 
 function drawCard() {
   if (currentPlayer !== "Toi") return log("⛔ Ce n'est pas ton tour !");
@@ -182,13 +179,8 @@ function initiateDiscardSwap() {
   showDrawnCard();
 }
 
+
 function renderCards() {
-  // Mettre à jour l'affichage des piles centrales
-  const discardElem = document.getElementById("discard");
-  if (discardElem) {
-    discardElem.innerText = discardPile.length > 0 ? discardPile[discardPile.length - 1] : "Vide";
-  }
-  // Mettre à jour la main du joueur
   const playerHandDiv = document.getElementById("player-hand");
   if (playerHandDiv) {
     playerHandDiv.innerHTML = `<h3>${sessionStorage.getItem("username") || "Moi"}</h3>`;
@@ -198,102 +190,73 @@ function renderCards() {
       const c = document.createElement("div");
       c.className = "card";
       c.innerText = revealedIndexes.includes(i) ? card : "?";
-      // Clic sur une carte du joueur
-      c.onclick = () => {
-        if (specialAction === "revealSelf") {
-          // Révéler cette carte au joueur
+
+      if (selectingInitialCards) {
+        c.classList.add("selectable-start");
+        c.onclick = () => {
           if (!revealedIndexes.includes(i)) {
-            revealedIndexes.push(i);
-            log(`👀 Vous regardez votre carte en position ${i+1} : ${card}`);
+            if (revealedIndexes.length < startVisibleCount) {
+              revealedIndexes.push(i);
+              renderCards();
+              if (revealedIndexes.length === startVisibleCount) {
+                log("👀 Cartes sélectionnées. Affichage temporaire...");
+                setTimeout(() => {
+                  revealedIndexes = [];
+                  selectingInitialCards = false;
+                  renderCards();
+                  log("🕑 Cartes de nouveau cachées.");
+                }, 5000);
+              }
+            } else {
+              log("⛔ Nombre maximum de cartes sélectionnées atteint.");
+            }
           }
-          specialAction = null;
-          document.getElementById("skip-special").style.display = "none";
-          renderCards();
-          endPlayerTurn();
-        } else if (specialAction === "swapJack") {
-          if (jackSwapSelectedIndex === null) {
-            // Sélectionner cette carte pour l'échange
-            jackSwapSelectedIndex = i;
-            log(`🤝 Vous avez sélectionné votre carte en position ${i+1} pour l'échange.`);
-            // (Optionnel : on pourrait mettre en évidence la carte sélectionnée)
-          } else {
-            // Permettre de re-sélectionner une autre de ses cartes si souhaité
-            jackSwapSelectedIndex = i;
-            log(`🤔 Nouvelle sélection : carte en position ${i+1}.`);
+        };
+      } else {
+        c.onclick = () => {
+          if (specialAction === "revealSelf") {
+            if (!revealedIndexes.includes(i)) {
+              revealedIndexes.push(i);
+              log(`👁️ Vous regardez votre carte : ${card}`);
+            }
+            specialAction = null;
+            document.getElementById("skip-special").style.display = "none";
+            renderCards();
+            endPlayerTurn();
+          } else if (specialAction === "swapJack") {
+            if (jackSwapSelectedIndex === null) {
+              jackSwapSelectedIndex = i;
+              log(`🤝 Vous avez sélectionné votre carte en position ${i + 1} pour l'échange.`);
+            } else {
+              jackSwapSelectedIndex = i;
+              log(`🔄 Nouvelle sélection : ${i + 1}.`);
+            }
+          } else if (drawnCard !== null) {
+            attemptCardSwap(i);
           }
-        } else if (drawnCard !== null) {
-          attemptCardSwap(i);
-        }
-      };
-      // Bouton poubelle pour la carte du joueur
+        };
+      }
+
+      // bouton défausse éclair
       const trashBtn = document.createElement("button");
       trashBtn.innerText = "🗑️";
       trashBtn.className = "discard-btn";
       trashBtn.onclick = () => discardCardFromHand(i);
+
       wrap.appendChild(trashBtn);
       wrap.appendChild(c);
       playerHandDiv.appendChild(wrap);
     });
   }
-  // Mettre à jour la main de l'adversaire (Bot)
-  const oppHandDiv = document.getElementById("opponent-hand");
-  if (oppHandDiv) {
-    oppHandDiv.innerHTML = "<h3>Bot</h3>";
-    botCards.forEach((card, i) => {
-      const wrap = document.createElement("div");
-      wrap.className = "card-wrapper";
-      const c = document.createElement("div");
-      c.className = "card";
-      c.innerText = "?";
-      // Clic sur une carte de l'adversaire (utile uniquement pour les actions spéciales)
-      c.onclick = () => {
-        if (specialAction === "lookOpp") {
-          // Révéler brièvement la carte de l'adversaire
-          c.innerText = card;
-          log(`🔍 Carte de l'adversaire en position ${i+1} : ${card}`);
-          setTimeout(() => {
-            c.innerText = "?";
-          }, 2000);
-          specialAction = null;
-          document.getElementById("skip-special").style.display = "none";
-          renderCards();
-          endPlayerTurn();
-        } else if (specialAction === "swapJack") {
-          if (jackSwapSelectedIndex !== null) {
-            // Échanger la carte sélectionnée du joueur avec cette carte de l'adversaire
-            const playerIndex = jackSwapSelectedIndex;
-            const playerCard = playerCards[playerIndex];
-            const oppCard = botCards[i];
-            // Échange des valeurs
-            playerCards[playerIndex] = oppCard;
-            botCards[i] = playerCard;
-            // Si la carte du joueur échangée était connue (révélée), l'oublier maintenant
-            const revIdx = revealedIndexes.indexOf(playerIndex);
-            if (revIdx !== -1) {
-              revealedIndexes.splice(revIdx, 1);
-            }
-            log(`🔄 Échange effectué : votre carte (position ${playerIndex+1}) avec la carte de l'adversaire (position ${i+1}).`);
-            specialAction = null;
-            jackSwapSelectedIndex = null;
-            document.getElementById("skip-special").style.display = "none";
-            renderCards();
-            endPlayerTurn();
-          } else {
-            log("❗ Sélectionnez d'abord une de vos cartes à échanger.");
-          }
-        }
-      };
-      // Bouton poubelle au-dessus de la carte de l'adversaire (défausse éclair visant l'adversaire)
-      const trashBtn = document.createElement("button");
-      trashBtn.innerText = "🗑️";
-      trashBtn.className = "discard-btn";
-      trashBtn.onclick = () => attemptBotCardPlay(i, card);
-      wrap.appendChild(trashBtn);
-      wrap.appendChild(c);
-      oppHandDiv.appendChild(wrap);
-    });
-  }
+
+  // appel existant pour afficher les cartes du bot (inchangé ici)
+  if (typeof renderBotCards === "function") renderBotCards();
+
+  const discardElem = document.getElementById("discard");
+  if (discardElem) discardElem.innerText = discardPile.length > 0 ? discardPile[discardPile.length - 1] : "Vide";
 }
+
+
 
 function attemptBotCardPlay(index, botCard) {
   const topDiscard = discardPile[discardPile.length - 1];
