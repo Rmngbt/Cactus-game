@@ -137,9 +137,6 @@ function renderCards() {
   div1.className = "player-hand";
   div1.innerHTML = "<h3>Toi</h3>";
 
-  let revealedCount = 0;
-  const maxReveal = startVisibleCount;
-
   playerCards.forEach((card, i) => {
     const wrap = document.createElement("div");
     wrap.className = "card-wrapper";
@@ -148,17 +145,24 @@ function renderCards() {
     c.className = "card";
     c.innerText = "?";
     c.dataset.index = i;
+
     c.onclick = () => {
-      if (revealedCount >= maxReveal || c.classList.contains("revealed")) return;
-      c.classList.add("revealed");
-      c.innerText = card;
-      revealedCount++;
-      setTimeout(() => {
-        c.innerText = "?";
-        c.classList.remove("revealed");
-      }, 5000);
+      if (!c.classList.contains("revealed")) {
+        c.classList.add("revealed");
+        c.innerText = card;
+        setTimeout(() => {
+          c.innerText = "?";
+          c.classList.remove("revealed");
+        }, 5000);
+      }
     };
 
+    const trash = document.createElement("button");
+    trash.innerText = "🗑";
+    trash.className = "discard-btn";
+    trash.onclick = () => discardCardFromHand(i);
+
+    wrap.appendChild(trash);
     wrap.appendChild(c);
     div1.appendChild(wrap);
   });
@@ -167,19 +171,28 @@ function renderCards() {
   div2.className = "player-hand";
   div2.innerHTML = "<h3>Bot</h3>";
 
-  botCards.forEach(() => {
+  botCards.forEach((card, i) => {
     const wrap = document.createElement("div");
     wrap.className = "card-wrapper";
 
     const c = document.createElement("div");
     c.className = "card";
     c.innerText = "?";
+    c.onclick = () => attemptBotCardPlay(i, card);
+
+    const trash = document.createElement("button");
+    trash.innerText = "🗑";
+    trash.className = "discard-btn";
+    trash.onclick = () => attemptBotCardPlay(i, card);
+
+    wrap.appendChild(trash);
     wrap.appendChild(c);
     div2.appendChild(wrap);
   });
 
   container.appendChild(div1);
   container.appendChild(div2);
+}
 }
  
 
@@ -202,7 +215,7 @@ function attemptBotCardPlay(index, botCard) {
   }
   renderCards();
 }
-
+}
 
 function updateTurn() {
   document.getElementById("turn-info").innerText = `Tour de : ${currentPlayer}`;
