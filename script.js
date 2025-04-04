@@ -153,16 +153,21 @@ function discardCardFromHand(index) {
     log("👁️ Effet 8 activé : choisissez une de vos cartes à révéler.");
     specialAction = "revealSelf";
     document.getElementById("skip-special").style.display = "inline-block";
+    renderCards();
+    return;
   } else if (card === 10 || card === "10") {
     log("🔎 Effet 10 activé : choisissez une carte de l'adversaire à regarder.");
     specialAction = "lookOpp";
     document.getElementById("skip-special").style.display = "inline-block";
+    renderCards();
+    return;
   } else if (card === "V" || card === "J" || card === 11) {
-    // "V" représente Valet (Jack)
     log("🔄 Effet Valet activé : échangez une de vos cartes avec une de celles de l'adversaire (à l'aveugle).");
     specialAction = "swapJack";
     jackSwapSelectedIndex = null;
     document.getElementById("skip-special").style.display = "inline-block";
+    renderCards();
+    return;
   } else {
     // Pas de pouvoir spécial, fin de tour immédiate
     renderCards();
@@ -299,7 +304,7 @@ function discardOpponentCard(index) {
   const topDiscard = discardPile[discardPile.length - 1];
   if (!topDiscard) return log("❌ Aucune carte dans la défausse.");
 
-  if (card === topDiscard) {
+  if (String(card) === String(topDiscard)) {
     log(`🎯 Bonne défausse ! La carte ${card} correspond à la défausse.`);
     discardPile.push(card);
     // retirer la carte du bot et lui donner une de nos cartes (dernière)
