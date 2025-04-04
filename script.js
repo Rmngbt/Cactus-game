@@ -130,17 +130,17 @@ function discardCardFromHand(index) {
   const card = playerCards[index];
   const topDiscard = discardPile[discardPile.length - 1];
   const normalize = (val) => (typeof val === "number" ? val : isNaN(val) ? val : parseInt(val));
+
+  // Cas 1 : défausse rapide (hors de ton tour)
   if (currentPlayer !== "Toi") {
-    // Défausse éclair sur sa propre carte (hors de son tour)
     if (!topDiscard) return log("❌ Aucune carte dans la défausse.");
+
     if (normalize(card) === normalize(topDiscard)) {
-      // Tentative réussie - retirer la carte de la main
       playerCards.splice(index, 1);
       discardPile.push(card);
       log(`⚡ Vous défaussez rapidement votre carte ${card} qui correspond à la défausse !`);
       checkSpecialEffect(card);
     } else {
-      // Mauvaise tentative - piocher une pénalité
       const penaltyCard = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
       playerCards.push(penaltyCard);
       log(`❌ Mauvaise tentative de défausse éclair. Vous piochez une carte de pénalité (${penaltyCard}).`);
@@ -148,53 +148,19 @@ function discardCardFromHand(index) {
     renderCards();
     return;
   }
-      // Tentative réussie - retirer la carte de la main
-      playerCards.splice(index, 1);
-      log(`⚡ Vous défaussez rapidement votre carte ${card} qui correspond à la défausse !`);
-    } else {
-      // Mauvaise tentative - piocher une pénalité
-      const penaltyCard = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
-      playerCards.push(penaltyCard);
-      log(`❌ Mauvaise tentative de défausse éclair. Vous piochez une carte de pénalité (${penaltyCard}).`);
-    }
-    renderCards();
-    return;
-  }
-  // Si c'est le tour du joueur et qu'une carte piochée n'est pas encore placée, on ne peut pas défausser de carte de la main
+
+  // Cas 2 : c'est ton tour
   if (drawnCard !== null) {
     return log("⏳ Vous devez d'abord jouer ou défausser la carte piochée.");
   }
-  // Défausse volontaire d'une carte de la main (tour du joueur)
+
+  // Défausse volontaire
   discardPile.push(card);
-  // Piocher une nouvelle carte pour la remplacer dans la main
   playerCards[index] = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
   log(`🗑 Défausse volontaire de la carte ${card}`);
-  // Vérifier si une carte spéciale déclenche son pouvoir
-  if (card === 8 || card === "8") {
-    log("👁️ Effet 8 activé : choisissez une de vos cartes à révéler.");
-    specialAction = "revealSelf";
-    document.getElementById("skip-special").style.display = "inline-block";
-    renderCards();
-    return;
-  } else if (card === 10 || card === "10") {
-    log("🔎 Effet 10 activé : choisissez une carte de l'adversaire à regarder.");
-    specialAction = "lookOpp";
-    document.getElementById("skip-special").style.display = "inline-block";
-    renderCards();
-    return;
-  } else if (card === "V" || card === "J" || card === 11) {
-    log("🔄 Effet Valet activé : échangez une de vos cartes avec une de celles de l'adversaire (à l'aveugle).");
-    specialAction = "swapJack";
-    jackSwapSelectedIndex = null;
-    document.getElementById("skip-special").style.display = "inline-block";
-    renderCards();
-    return;
-  } else {
-    // Pas de pouvoir spécial, fin de tour immédiate
-    renderCards();
-    endPlayerTurn();
-  }
+  checkSpecialEffect(card);
   renderCards();
+  endPlayerTurn();
 }
 
 function initiateDiscardSwap() {
