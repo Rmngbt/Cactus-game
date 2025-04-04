@@ -267,11 +267,7 @@ wrap.appendChild(c);
         // Bloc retiré car déjà présent dans la fonction onclick du valet
       };
     
-        specialAction = null;
-        jackSwapSelectedIndex = null;
-        document.getElementById("skip-special").style.display = "none";
-        renderCards();
-      };
+        };
     }
 
     wrap.appendChild(c);
