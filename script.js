@@ -186,6 +186,7 @@ function renderCards() {
 
     if (selectingInitialCards) {
       c.classList.add("selectable-start");
+      if (revealedIndexes.includes(i)) c.classList.add("highlight");
       c.onclick = () => {
         if (!revealedIndexes.includes(i)) {
           if (revealedIndexes.length < startVisibleCount) {
