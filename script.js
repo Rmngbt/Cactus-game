@@ -243,6 +243,16 @@ wrap.appendChild(c);
     c.className = "card";
     c.innerText = "?";
 
+    if (specialAction === "lookOpp") {
+      c.onclick = () => {
+        c.innerText = card;
+        log(`👁️ Carte du bot en position ${i + 1} : ${card}`);
+        setTimeout(() => renderCards(), 2000);
+        specialAction = null;
+        document.getElementById("skip-special").style.display = "none";
+      };
+    }
+
     if (specialAction === "swapJack" && jackSwapSelectedIndex !== null) {
       c.classList.add("highlight-swap");
       c.onclick = () => {
