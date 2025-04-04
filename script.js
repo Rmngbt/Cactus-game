@@ -342,7 +342,7 @@ function discardOpponentCard(index) {
   if (normalize(card) === normalize(topDiscard)) {
     log(`🎯 Bonne défausse ! La carte ${card} correspond à la défausse.`);
     discardPile.push(card);
-    checkSpecialEffect(card); et lui donner une de nos cartes (dernière)
+    checkSpecialEffect(card); // et lui donner une de nos cartes (dernière)
     if (playerCards.length > 0) {
       botCards[index] = playerCards.pop();
     } else {
