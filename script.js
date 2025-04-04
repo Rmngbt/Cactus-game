@@ -424,13 +424,45 @@ function skipSpecial() {
 }
 
 function declareCactus() {
-  log("🌵 Cactus ! Fin de manche.");
-  // Révéler toutes les cartes pour information
-  log(`Votre main : ${playerCards.join(", ")}`);
-  log(`Main du Bot : ${botCards.join(", ")}`);
-  // (Le jeu s'arrête ici pour cette démonstration hors-ligne.)
-}
+  log("🌵 Cactus annoncé ! Tous les autres joueurs jouent encore un tour.");
 
+  let cactusDeclared = true;
+
+  // Sauvegarder l'état du joueur
+  const cactusPlayerCards = [...playerCards];
+  const cactusPlayer = currentPlayer;
+
+  // Passer au bot pour un dernier tour
+  currentPlayer = "Bot";
+  updateTurn();
+
+  setTimeout(() => {
+    botPlayTurn();
+
+    // Une fois le bot joué, révéler les cartes
+    setTimeout(() => {
+      log("🌵 Fin de manche. Révélation des cartes :");
+      log(`Main du joueur : ${cactusPlayerCards.join(", ")}`);
+      log(`Main du bot : ${botCards.join(", ")}`);
+
+      // Calcul basique pour vérifier si le joueur a gagné (somme <= 5)
+      const cardValue = (c) => c === "R" ? 0 : c === "A" ? 1 : c === 2 ? -2 : ["V", "D", 10].includes(c) ? 10 : parseInt(c);
+      const playerScore = cactusPlayerCards.map(cardValue).reduce((a, b) => a + b, 0);
+      const botScore = botCards.map(cardValue).reduce((a, b) => a + b, 0);
+
+      if (playerScore <= 5) {
+        log(`✅ Cactus réussi ! Ton score est ${playerScore}.`);
+      } else {
+        log(`❌ Cactus raté... Ton score est ${playerScore}.`);
+      }
+
+      if (botScore <= 5) {
+        log(`🤖 Le bot a aussi cactus avec un score de ${botScore}.`);
+      }
+
+    }, 1500);
+  }, 1500);
+}
 window.addEventListener("DOMContentLoaded", () => {
   // Attacher les écouteurs d'événements aux boutons
   document.getElementById("btn-login")?.addEventListener("click", login);
