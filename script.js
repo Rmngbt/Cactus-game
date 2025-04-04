@@ -256,7 +256,7 @@ wrap.appendChild(c);
     wrap.appendChild(c);
     botHandDiv.appendChild(wrap);
     botHandDiv.appendChild(wrap);
-  });
+  
 
   const discardElem = document.getElementById("discard");
   if (discardElem) discardElem.innerText = discardPile.length > 0 ? discardPile[discardPile.length - 1] : "Vide";
