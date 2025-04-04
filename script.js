@@ -264,10 +264,7 @@ wrap.appendChild(c);
         playerCards[jackSwapSelectedIndex] = botCards[i];
         botCards[i] = tmp;
         log(`🔄 Échange avec le bot (position ${i + 1}).`);
-        specialAction = null;
-        jackSwapSelectedIndex = null;
-        document.getElementById("skip-special").style.display = "none";
-        renderCards();
+        // Bloc retiré car déjà présent dans la fonction onclick du valet
       };
     
         specialAction = null;
