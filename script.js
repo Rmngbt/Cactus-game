@@ -99,8 +99,12 @@ function discardDrawnCard() {
   if (drawnCard === null) return;
   discardPile.push(drawnCard);
   log(`🗑 Carte piochée défaussée : ${drawnCard}`);
-  checkSpecialEffect(discardPile[discardPile.length - 1]);
-  return;
+  checkSpecialEffect(drawnCard);
+  drawnCard = null;
+  document.getElementById("drawn-card").style.display = "none";
+  document.getElementById("discard-drawn")?.remove();
+  renderCards();
+  endPlayerTurn();
   drawnCard = null;
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
@@ -115,6 +119,7 @@ function attemptCardSwap(index) {
   drawnCard = null;
   discardPile.push(oldCard);
   log(`🔄 Carte échangée : ${oldCard} → ${playerCards[index]}`);
+  checkSpecialEffect(oldCard);
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
   renderCards();
@@ -337,7 +342,7 @@ function discardOpponentCard(index) {
   if (normalize(card) === normalize(topDiscard)) {
     log(`🎯 Bonne défausse ! La carte ${card} correspond à la défausse.`);
     discardPile.push(card);
-    // retirer la carte du bot et lui donner une de nos cartes (dernière)
+    checkSpecialEffect(card); et lui donner une de nos cartes (dernière)
     if (playerCards.length > 0) {
       botCards[index] = playerCards.pop();
     } else {
