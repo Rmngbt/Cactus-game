@@ -258,11 +258,18 @@ wrap.appendChild(c);
         document.getElementById("skip-special").style.display = "none";
       };
     } else if (specialAction === "swapJack" && jackSwapSelectedIndex !== null) {
+      c.classList.add("highlight-swap");
       c.onclick = () => {
         const tmp = playerCards[jackSwapSelectedIndex];
         playerCards[jackSwapSelectedIndex] = botCards[i];
         botCards[i] = tmp;
         log(`🔄 Échange avec le bot (position ${i + 1}).`);
+        specialAction = null;
+        jackSwapSelectedIndex = null;
+        document.getElementById("skip-special").style.display = "none";
+        renderCards();
+      };
+    }).`);
         specialAction = null;
         jackSwapSelectedIndex = null;
         document.getElementById("skip-special").style.display = "none";
@@ -362,6 +369,8 @@ function handleCardClick(index, card) {
   } else if (specialAction === "swapJack") {
     jackSwapSelectedIndex = index;
     log(`🃏 Carte sélectionnée pour échange avec le bot.`);
+    document.querySelectorAll('.card').forEach(card => card.classList.remove('highlight-swap'));
+    renderCards();
   } else if (drawnCard !== null) {
     attemptCardSwap(index);
   }
