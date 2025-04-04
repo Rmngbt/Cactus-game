@@ -269,7 +269,7 @@ wrap.appendChild(c);
         document.getElementById("skip-special").style.display = "none";
         renderCards();
       };
-    }).`);
+    
         specialAction = null;
         jackSwapSelectedIndex = null;
         document.getElementById("skip-special").style.display = "none";
@@ -284,7 +284,7 @@ wrap.appendChild(c);
 
   const discardElem = document.getElementById("discard");
   if (discardElem) discardElem.innerText = discardPile.length > 0 ? discardPile[discardPile.length - 1] : "Vide";
-}
+
 
 
 function attemptBotCardPlay(index, botCard) {
