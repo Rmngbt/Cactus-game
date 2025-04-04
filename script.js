@@ -236,6 +236,12 @@ wrap.appendChild(c);
 
   const botHandDiv = document.getElementById("opponent-hand");
   botHandDiv.innerHTML = "<h3>Bot</h3>";
+  botCards.forEach((card, i) => {
+    const wrap = document.createElement("div");
+    wrap.className = "card-wrapper";
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerText = "?";
   if (specialAction === "swapJack" && jackSwapSelectedIndex !== null) {
     c.classList.add("highlight-swap");
     c.onclick = () => {
