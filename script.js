@@ -236,34 +236,19 @@ wrap.appendChild(c);
 
   const botHandDiv = document.getElementById("opponent-hand");
   botHandDiv.innerHTML = "<h3>Bot</h3>";
-  botCards.forEach((card, i) => {
-    const wrap = document.createElement("div");
-    wrap.className = "card-wrapper";
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerText = "?";
-
-    const botTrashBtn = document.createElement("button");
-    botTrashBtn.innerText = "🗑️";
-    botTrashBtn.className = "discard-btn";
-    botTrashBtn.onclick = () => discardOpponentCard(i);
-    wrap.appendChild(botTrashBtn);
-
-    if (specialAction === "lookOpp") {
-      c.onclick = () => {
-        c.innerText = card;
-        log(`👁️ Carte du bot en position ${i + 1} : ${card}`);
-        setTimeout(() => renderCards(), 2000);
-        specialAction = null;
-        document.getElementById("skip-special").style.display = "none";
-      };
-    } else if (specialAction === "swapJack" && jackSwapSelectedIndex !== null) {
-      c.classList.add("highlight-swap");
-      c.onclick = () => {
-        const tmp = playerCards[jackSwapSelectedIndex];
-        playerCards[jackSwapSelectedIndex] = botCards[i];
-        botCards[i] = tmp;
-        log(`🔄 Échange avec le bot (position ${i + 1}).`);
+  if (specialAction === "swapJack" && jackSwapSelectedIndex !== null) {
+    c.classList.add("highlight-swap");
+    c.onclick = () => {
+      const tmp = playerCards[jackSwapSelectedIndex];
+      playerCards[jackSwapSelectedIndex] = botCards[i];
+      botCards[i] = tmp;
+      log(`🔄 Échange avec le bot (position ${i + 1}).`);
+      specialAction = null;
+      jackSwapSelectedIndex = null;
+      document.getElementById("skip-special").style.display = "none";
+      renderCards();
+    };
+  }).`);
         // Bloc retiré car déjà présent dans la fonction onclick du valet
       };
     
