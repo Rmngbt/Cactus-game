@@ -100,6 +100,7 @@ function discardDrawnCard() {
   discardPile.push(drawnCard);
   log(`🗑 Carte piochée défaussée : ${drawnCard}`);
   checkSpecialEffect(drawnCard);
+  if (!specialAction) endPlayerTurn();
   drawnCard = null;
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
@@ -120,6 +121,7 @@ function attemptCardSwap(index) {
   discardPile.push(oldCard);
   log(`🔄 Carte échangée : ${oldCard} → ${playerCards[index]}`);
   checkSpecialEffect(oldCard);
+  if (!specialAction) endPlayerTurn();
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
   renderCards();
@@ -159,6 +161,7 @@ function discardCardFromHand(index) {
   playerCards[index] = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
   log(`🗑 Défausse volontaire de la carte ${card}`);
   checkSpecialEffect(card);
+  if (!specialAction) endPlayerTurn();
   renderCards();
   endPlayerTurn();
 }
