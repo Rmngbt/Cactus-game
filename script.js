@@ -236,6 +236,12 @@ wrap.appendChild(c);
     c.className = "card";
     c.innerText = "?";
 
+    const botTrashBtn = document.createElement("button");
+    botTrashBtn.innerText = "🗑️";
+    botTrashBtn.className = "discard-btn";
+    botTrashBtn.onclick = () => discardOpponentCard(i);
+    wrap.appendChild(botTrashBtn);
+
     if (specialAction === "lookOpp") {
       c.onclick = () => {
         c.innerText = card;
@@ -258,6 +264,7 @@ wrap.appendChild(c);
     }
 
     wrap.appendChild(c);
+    botHandDiv.appendChild(wrap);
     botHandDiv.appendChild(wrap);
   });
 
@@ -437,3 +444,4 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-declare-cactus")?.addEventListener("click", declareCactus);
   document.getElementById("skip-special")?.addEventListener("click", skipSpecial);
 });
+
