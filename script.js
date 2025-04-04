@@ -309,6 +309,24 @@ function discardOpponentCard(index) {
   renderCards();
 }
 
+function handleCardClick(index, card) {
+  if (specialAction === "revealSelf") {
+    if (!revealedIndexes.includes(index)) {
+      revealedIndexes.push(index);
+      log(`👁️ Vous regardez votre carte : ${card}`);
+    }
+    specialAction = null;
+    document.getElementById("skip-special").style.display = "none";
+    renderCards();
+    endPlayerTurn();
+  } else if (specialAction === "swapJack") {
+    jackSwapSelectedIndex = index;
+    log(`🃏 Carte sélectionnée pour échange avec le bot.`);
+  } else if (drawnCard !== null) {
+    attemptCardSwap(index);
+  }
+}
+
 function updateTurn() {
   document.getElementById("turn-info").innerText = `Tour de ${currentPlayer}`;
 }
