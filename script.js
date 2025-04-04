@@ -126,7 +126,7 @@ function discardCardFromHand(index) {
     // Défausse éclair sur sa propre carte (hors de son tour)
     const topDiscard = discardPile[discardPile.length - 1];
     if (!topDiscard) return log("❌ Aucune carte dans la défausse.");
-    if (card === topDiscard) {
+    if (String(card) === String(topDiscard)) {
       // Tentative réussie - retirer la carte de la main
       playerCards.splice(index, 1);
       log(`⚡ Vous défaussez rapidement votre carte ${card} qui correspond à la défausse !`);
@@ -444,4 +444,3 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-declare-cactus")?.addEventListener("click", declareCactus);
   document.getElementById("skip-special")?.addEventListener("click", skipSpecial);
 });
-
