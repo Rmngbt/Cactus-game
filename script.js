@@ -242,27 +242,29 @@ wrap.appendChild(c);
     const c = document.createElement("div");
     c.className = "card";
     c.innerText = "?";
-  if (specialAction === "swapJack" && jackSwapSelectedIndex !== null) {
-    c.classList.add("highlight-swap");
-    c.onclick = () => {
-      const tmp = playerCards[jackSwapSelectedIndex];
-      playerCards[jackSwapSelectedIndex] = botCards[i];
-      botCards[i] = tmp;
-      log(`🔄 Échange avec le bot (position ${i + 1}).`);
-      specialAction = null;
-      jackSwapSelectedIndex = null;
-      document.getElementById("skip-special").style.display = "none";
-      renderCards();
-    };
-  
-    
-        };
+
+    if (specialAction === "swapJack" && jackSwapSelectedIndex !== null) {
+      c.classList.add("highlight-swap");
+      c.onclick = () => {
+        const tmp = playerCards[jackSwapSelectedIndex];
+        playerCards[jackSwapSelectedIndex] = botCards[i];
+        botCards[i] = tmp;
+        log(`🔄 Échange avec le bot (position ${i + 1}).`);
+        specialAction = null;
+        jackSwapSelectedIndex = null;
+        document.getElementById("skip-special").style.display = "none";
+        renderCards();
+      };
     }
 
+    const botTrashBtn = document.createElement("button");
+    botTrashBtn.innerText = "🗑️";
+    botTrashBtn.className = "discard-btn";
+    botTrashBtn.onclick = () => discardOpponentCard(i);
+    wrap.appendChild(botTrashBtn);
     wrap.appendChild(c);
     botHandDiv.appendChild(wrap);
-    botHandDiv.appendChild(wrap);
-  
+  });
 
   const discardElem = document.getElementById("discard");
   if (discardElem) discardElem.innerText = discardPile.length > 0 ? discardPile[discardPile.length - 1] : "Vide";
