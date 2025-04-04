@@ -128,12 +128,26 @@ function attemptCardSwap(index) {
 
 function discardCardFromHand(index) {
   const card = playerCards[index];
+  const topDiscard = discardPile[discardPile.length - 1];
+  const normalize = (val) => (typeof val === "number" ? val : isNaN(val) ? val : parseInt(val));
   if (currentPlayer !== "Toi") {
     // Défausse éclair sur sa propre carte (hors de son tour)
-    const topDiscard = discardPile[discardPile.length - 1];
     if (!topDiscard) return log("❌ Aucune carte dans la défausse.");
-    const normalize = (val) => typeof val === "number" ? val : isNaN(val) ? val : parseInt(val);
-  if (normalize(card) === normalize(topDiscard)) {
+    if (normalize(card) === normalize(topDiscard)) {
+      // Tentative réussie - retirer la carte de la main
+      playerCards.splice(index, 1);
+      discardPile.push(card);
+      log(`⚡ Vous défaussez rapidement votre carte ${card} qui correspond à la défausse !`);
+      checkSpecialEffect(card);
+    } else {
+      // Mauvaise tentative - piocher une pénalité
+      const penaltyCard = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
+      playerCards.push(penaltyCard);
+      log(`❌ Mauvaise tentative de défausse éclair. Vous piochez une carte de pénalité (${penaltyCard}).`);
+    }
+    renderCards();
+    return;
+  }
       // Tentative réussie - retirer la carte de la main
       playerCards.splice(index, 1);
       log(`⚡ Vous défaussez rapidement votre carte ${card} qui correspond à la défausse !`);
