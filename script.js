@@ -97,9 +97,9 @@ function showDrawnCard() {
 
 function discardDrawnCard() {
   if (drawnCard === null) return;
-  // Défausser la carte piochée sans l'échanger
   discardPile.push(drawnCard);
   log(`🗑 Carte piochée défaussée : ${drawnCard}`);
+  checkSpecialEffect(discardPile[discardPile.length - 1]);
   drawnCard = null;
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
@@ -126,7 +126,8 @@ function discardCardFromHand(index) {
     // Défausse éclair sur sa propre carte (hors de son tour)
     const topDiscard = discardPile[discardPile.length - 1];
     if (!topDiscard) return log("❌ Aucune carte dans la défausse.");
-    if (String(card) === String(topDiscard)) {
+    const normalize = (val) => typeof val === "number" ? val : isNaN(val) ? val : parseInt(val);
+  if (normalize(card) === normalize(topDiscard)) {
       // Tentative réussie - retirer la carte de la main
       playerCards.splice(index, 1);
       log(`⚡ Vous défaussez rapidement votre carte ${card} qui correspond à la défausse !`);
