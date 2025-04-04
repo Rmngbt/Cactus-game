@@ -300,6 +300,31 @@ function attemptBotCardPlay(index, botCard) {
   renderCards();
 }
 
+function checkSpecialEffect(card) {
+  if (card === 8 || card === "8") {
+    log("👁️ Effet 8 activé : choisissez une de vos cartes à révéler.");
+    specialAction = "revealSelf";
+    document.getElementById("skip-special").style.display = "inline-block";
+    renderCards();
+    return;
+  }
+  if (card === 10 || card === "10") {
+    log("🔎 Effet 10 activé : choisissez une carte de l'adversaire à regarder.");
+    specialAction = "lookOpp";
+    document.getElementById("skip-special").style.display = "inline-block";
+    renderCards();
+    return;
+  }
+  if (card === "V" || card === "J" || card === 11) {
+    log("🔄 Effet Valet activé : échangez une de vos cartes avec une de celles de l'adversaire (à l'aveugle).");
+    specialAction = "swapJack";
+    jackSwapSelectedIndex = null;
+    document.getElementById("skip-special").style.display = "inline-block";
+    renderCards();
+    return;
+  }
+}
+
 function discardOpponentCard(index) {
   const card = botCards[index];
   const topDiscard = discardPile[discardPile.length - 1];
