@@ -100,6 +100,7 @@ function discardDrawnCard() {
   discardPile.push(drawnCard);
   log(`🗑 Carte piochée défaussée : ${drawnCard}`);
   checkSpecialEffect(discardPile[discardPile.length - 1]);
+  return;
   drawnCard = null;
   document.getElementById("drawn-card").style.display = "none";
   document.getElementById("discard-drawn")?.remove();
@@ -330,7 +331,8 @@ function discardOpponentCard(index) {
   const topDiscard = discardPile[discardPile.length - 1];
   if (!topDiscard) return log("❌ Aucune carte dans la défausse.");
 
-  if (String(card) === String(topDiscard)) {
+  const normalize = (val) => typeof val === "number" ? val : isNaN(val) ? val : parseInt(val);
+  if (normalize(card) === normalize(topDiscard)) {
     log(`🎯 Bonne défausse ! La carte ${card} correspond à la défausse.`);
     discardPile.push(card);
     // retirer la carte du bot et lui donner une de nos cartes (dernière)
