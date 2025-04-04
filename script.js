@@ -248,9 +248,7 @@ wrap.appendChild(c);
       document.getElementById("skip-special").style.display = "none";
       renderCards();
     };
-  }).`);
-        // Bloc retiré car déjà présent dans la fonction onclick du valet
-      };
+  
     
         };
     }
