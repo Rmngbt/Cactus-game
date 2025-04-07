@@ -1,4 +1,4 @@
-/* style.css (fusionné avec version précédente) */
+/* style.css (Responsive version) */
 
 body {
   font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -9,16 +9,17 @@ body {
   text-align: center;
 }
 
+/* Page d'accueil – L'image de fond est chargée via CSS */
 #welcome {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 100vh; /* Occupe toute la hauteur du viewport */
   background-image: url('https://raw.githubusercontent.com/Rmngbt/Cactus-game/main/acceuil.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-size: cover;         /* L'image couvre entièrement le conteneur */
+  background-position: center;    /* L'image est centrée */
+  background-repeat: no-repeat;   /* Pas de répétition */
   padding: 20px;
   color: white;
   text-shadow: 1px 1px 4px black;
@@ -43,6 +44,7 @@ body {
   background-color: #28a428;
 }
 
+/* Boutons généraux */
 button {
   font-family: inherit;
   font-size: 14px;
@@ -55,6 +57,7 @@ button {
   color: white;
 }
 
+/* Sections de configuration et jeu */
 #config,
 #lobby,
 #setup,
@@ -62,6 +65,7 @@ button {
   margin-top: 30px;
 }
 
+/* Zone de jeu */
 #all-players {
   display: flex;
   flex-direction: column;
@@ -95,10 +99,12 @@ button {
   font-weight: bold;
   color: white;
   margin: 5px;
-  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-#center-zone, #central-piles {
+/* Zones centrales (pioche et défausse) */
+#center-zone,
+#central-piles {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -107,7 +113,8 @@ button {
   flex-wrap: wrap;
 }
 
-#center-zone .card, #central-piles .card {
+#center-zone .card,
+#central-piles .card {
   width: 80px;
   height: 120px;
   background: #d2691e;
@@ -116,10 +123,11 @@ button {
   font-size: 20px;
   line-height: 120px;
   font-weight: bold;
-  box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
   cursor: pointer;
 }
 
+/* Carte piochée */
 #drawn-card {
   font-weight: bold;
   margin-top: 10px;
@@ -128,9 +136,10 @@ button {
   display: inline-block;
   padding: 8px 16px;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+/* Journal (log) */
 #log {
   border: 2px dashed black;
   padding: 10px;
@@ -139,9 +148,103 @@ button {
   background: #fff;
 }
 
+/* Information de tour */
 #turn-info {
   font-weight: bold;
   margin-top: 10px;
   font-size: 16px;
   color: #333;
+}
+
+/* Styles supplémentaires pour les cartes et boutons */
+.card-wrapper {
+  display: inline-block;
+  margin: 10px;
+  position: relative;
+}
+
+.card.selectable-start {
+  outline: 3px dashed yellow;
+}
+
+.card.highlight {
+  outline: 3px solid lime;
+  box-shadow: 0 0 10px lime;
+}
+
+.discard-btn {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: crimson;
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Responsive Styles --- */
+
+/* Pour tablettes et écrans moyens */
+@media (max-width: 768px) {
+  .player-hand .card,
+  #center-zone .card,
+  #central-piles .card {
+    width: 60px;
+    height: 90px;
+    font-size: 18px;
+    line-height: 90px;
+  }
+  
+  #welcome input,
+  #welcome button {
+    font-size: 16px;
+    padding: 10px 16px;
+  }
+  
+  button {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  
+  #log {
+    max-width: 90%;
+    margin: 10px auto;
+  }
+}
+
+/* Pour mobiles */
+@media (max-width: 480px) {
+  .player-hand .card,
+  #center-zone .card,
+  #central-piles .card {
+    width: 50px;
+    height: 75px;
+    font-size: 16px;
+    line-height: 75px;
+  }
+  
+  #welcome {
+    padding: 10px;
+  }
+  
+  #welcome input,
+  #welcome button {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  
+  button {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  #log {
+    max-width: 90%;
+    font-size: 10px;
+  }
 }
